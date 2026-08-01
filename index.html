@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <link rel="preload" as="font" type="font/woff2" crossorigin="" href="/mytonprovider-frontend/assets/inter-cyrillic-wght-normal-DqGufNeO.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin="" href="/mytonprovider-frontend/assets/inter-latin-wght-normal-Dx4kXJAl.woff2">
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>TON Provider Explorer</title>
+    <meta name="description" content="Catalog of TON Storage providers: search, sorting, filters, status and telemetry" />
+    <link rel="canonical" href="https://nessshon.github.io/mytonprovider-frontend/" />
+    <link rel="icon" href="/mytonprovider-frontend/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/mytonprovider-frontend/icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nessshon.github.io/mytonprovider-frontend/" />
+    <meta property="og:site_name" content="TON Provider Explorer" />
+    <meta property="og:title" content="TON Provider Explorer" />
+    <meta property="og:description" content="Catalog of TON Storage providers: search, sorting, filters, status and telemetry" />
+    <meta property="og:image" content="https://nessshon.github.io/mytonprovider-frontend/banner.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TON Provider Explorer" />
+    <meta name="twitter:description" content="Catalog of TON Storage providers: search, sorting, filters, status and telemetry" />
+    <meta name="twitter:image" content="https://nessshon.github.io/mytonprovider-frontend/banner.png" />
+    <script>
+      (function () {
+        var theme = null
+        try {
+          theme = localStorage.getItem("mtp_theme")
+        } catch (e) {}
+        if (theme !== "dark" && theme !== "light") {
+          theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+        }
+        document.documentElement.dataset.theme = theme
+        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#0e0e11" : "#ffffff"
+      })()
+    </script>
+    <script type="module" crossorigin src="/mytonprovider-frontend/assets/index-sotLT02H.js"></script>
+    <link rel="stylesheet" crossorigin href="/mytonprovider-frontend/assets/index-at7Zy_yl.css">
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
