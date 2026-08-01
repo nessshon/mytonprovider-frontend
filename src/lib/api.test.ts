@@ -1,0 +1,71 @@
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { ApiError, fetchProviders } from "./api"
+import { stable } from "./fixtures"
+
+const signal = () => new AbortController().signal
+
+const page = (count: number) => ({ providers: Array.from({ length: count }, () => stable) })
+
+const respondWith = (bodies: unknown[]) => {
+  const calls: string[] = []
+  const fetchStub = vi.fn((_url: string, init: RequestInit) => {
+    calls.push(typeof init.body === "string" ? init.body : "")
+    const body = bodies[calls.length - 1] ?? { providers: [] }
+    return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }))
+  })
+  vi.stubGlobal("fetch", fetchStub)
+  return calls
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe("fetchProviders", () => {
+  it("stops after a page that is not full", async () => {
+    const calls = respondWith([page(3)])
+
+    await expect(fetchProviders({}, signal())).resolves.toHaveLength(3)
+    expect(calls).toHaveLength(1)
+  })
+
+  it("walks pages until the catalog runs out, moving the offset", async () => {
+    const calls = respondWith([page(200), page(200), page(7)])
+
+    await expect(fetchProviders({}, signal())).resolves.toHaveLength(407)
+    expect(calls.map((body) => (JSON.parse(body) as { offset: number }).offset)).toEqual([0, 200, 400])
+  })
+
+  it("stops walking once the cap is reached", async () => {
+    const calls = respondWith(Array.from({ length: 40 }, () => page(200)))
+
+    await expect(fetchProviders({}, signal())).resolves.toHaveLength(5000)
+    expect(calls).toHaveLength(25)
+  })
+
+  it("passes the filters along", async () => {
+    const calls = respondWith([page(1)])
+    await fetchProviders({ has_free_space: true }, signal())
+
+    expect((JSON.parse(calls[0]) as { filters: unknown }).filters).toEqual({ has_free_space: true })
+  })
+
+  it("treats an empty catalog as no providers", async () => {
+    respondWith([{ providers: null }])
+
+    await expect(fetchProviders({}, signal())).resolves.toEqual([])
+  })
+
+  it("reports the status code when the catalog refuses", async () => {
+    vi.stubGlobal("fetch", () => Promise.resolve(new Response("rate limited", { status: 429 })))
+
+    await expect(fetchProviders({}, signal())).rejects.toBeInstanceOf(ApiError)
+    await expect(fetchProviders({}, signal())).rejects.toMatchObject({ status: 429 })
+  })
+
+  it("refuses an answer that is not shaped like a catalog", async () => {
+    respondWith([{ unexpected: true }])
+
+    await expect(fetchProviders({}, signal())).rejects.toThrow("unexpected providers response shape")
+  })
+})

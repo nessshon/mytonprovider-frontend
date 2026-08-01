@@ -1,0 +1,36 @@
+.ellipsis {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.outline {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.outline:hover {
+  border-color: var(--border-strong);
+}
+
+.textButton {
+  font-size: var(--font-sm);
+}
+
+.textButton:hover {
+  background: var(--surface-3);
+}
+
+.fieldChevron {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  pointer-events: none;
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vite/
+logs/
+*.log
+*.local
+*.tsbuildinfo
+.env
+.env.*
+.eslintcache
+.idea/
+.vscode/
+.DS_Store
