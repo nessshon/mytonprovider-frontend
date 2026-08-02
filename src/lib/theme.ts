@@ -7,10 +7,6 @@ type Theme = "dark" | "light"
 
 const SPREAD_MS = 320
 
-type ViewTransitionDocument = Document & {
-  startViewTransition?: (callback: () => void) => { ready: Promise<void> }
-}
-
 const currentTheme = (): Theme => (document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light")
 
 const apply = (theme: Theme): void => {
@@ -24,9 +20,7 @@ const apply = (theme: Theme): void => {
 }
 
 const spreadFrom = (origin: DOMRect, change: () => void): void => {
-  const view = document as ViewTransitionDocument
-
-  if (reducedMotion() || typeof view.startViewTransition !== "function") {
+  if (reducedMotion() || typeof document.startViewTransition !== "function") {
     change()
     return
   }
@@ -35,7 +29,7 @@ const spreadFrom = (origin: DOMRect, change: () => void): void => {
   const y = origin.top + origin.height / 2
   const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))
 
-  view
+  document
     .startViewTransition(change)
     .ready.then(() =>
       document.documentElement.animate(
