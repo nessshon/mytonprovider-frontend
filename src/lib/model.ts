@@ -335,7 +335,9 @@ const agoField = (label: string, age: number | null, t: Translate): DetailField 
       }
 
 export const toDetail = (provider: Provider, fetchedAt: number, t: Translate): ProviderDetail => {
-  const stats = [...(provider.statuses_reason_stats ?? [])].sort((a, b) => b.cnt - a.cnt)
+  const stats = (provider.statuses_reason_stats ?? [])
+    .filter((stat) => Number.isFinite(stat?.cnt) && Number.isFinite(stat.reason))
+    .sort((a, b) => b.cnt - a.cnt)
   const total = stats.reduce((sum, stat) => sum + stat.cnt, 0)
   const valid = stats.find((stat) => stat.reason === 0)?.cnt ?? 0
   const reason = dominantReason(stats, total)
@@ -357,14 +359,16 @@ export const toDetail = (provider: Provider, fetchedAt: number, t: Translate): P
           uppercase: true,
           mono: true,
         },
-        {
-          label: t("provider.address"),
-          value: shortenMiddle(provider.address, 6, 6),
-          title: provider.address,
-          href: `https://tonscan.org/address/${encodeURIComponent(provider.address)}`,
-          copy: provider.address,
-          mono: true,
-        },
+        provider.address
+          ? {
+              label: t("provider.address"),
+              value: shortenMiddle(provider.address, 6, 6),
+              title: provider.address,
+              href: `https://tonscan.org/address/${encodeURIComponent(provider.address)}`,
+              copy: provider.address,
+              mono: true,
+            }
+          : textField(t("provider.address"), null),
         textField(t("provider.span"), `${formatDuration(provider.min_span, t)} – ${formatDuration(provider.max_span, t)}`),
         textField(t("provider.maxBagSize"), formatBytes(provider.max_bag_size_bytes, t)),
         textField(t("provider.workingTime"), formatDuration(provider.working_time, t)),

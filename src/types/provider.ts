@@ -31,7 +31,7 @@ export interface StatusReasonStat {
 
 export interface Provider {
   pubkey: string
-  address: string
+  address: string | null
   status: number | null
   status_ratio: number
   location: ProviderLocation | null

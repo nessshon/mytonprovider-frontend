@@ -45,6 +45,20 @@ describe("toRow", () => {
 })
 
 describe("toDetail", () => {
+  it("survives a provider the catalog sent without an address", () => {
+    const detail = toDetail({ ...stable, address: null }, NOW, t)
+
+    expect(detail.sections.flatMap((section) => section.fields).find((f) => f.label === "provider.address")?.value).toBe(
+      "—",
+    )
+  })
+
+  it("ignores broken entries in the check statistics", () => {
+    const broken = { ...stable, statuses_reason_stats: [null, { reason: 0, cnt: 5 }] as never }
+
+    expect(toDetail(broken, NOW, t).checks).toEqual({ valid: 5, total: 5, tone: "green" })
+  })
+
   it("reports the dominant failure instead of the successful minority", () => {
     expect(toDetail(mostlyFailing, NOW, t).description).toBe("status.reason.301")
   })
