@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ArrowUp, Search, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { FiltersData, FiltersRange } from "@/types/filters"
-import type { Provider } from "@/types/provider"
-import type { SortDirection, SortField } from "@/types/model"
-import { ApiError, fetchProviders } from "@/lib/api"
-import { collectHashes, deriveFiltersRange, matchesQuery, sortProviders, toDetail, toRow } from "@/lib/model"
-import { NO_FILTERS, countActiveFilters, isPristine } from "@/lib/filters"
+import type { FiltersData } from "@/types/filters"
+import { PAGE_SIZE, useCatalog } from "@/lib/catalog"
+import { NO_FILTERS, countActiveFilters } from "@/lib/filters"
 import { FAVORITES_KEY, readStoredStrings, writeStored } from "@/lib/storage"
 import { copyText, scrollToTop } from "@/lib/dom"
 import Header from "@/components/header"
@@ -19,7 +16,6 @@ import { ProviderList } from "@/components/provider-list"
 import { Sheet } from "@/components/sheet"
 import styles from "./app.module.css"
 
-const PAGE_SIZE = 10
 const COPIED_RESET_MS = 1200
 
 type Overlay = { kind: "filters" } | { kind: "detail"; pubkey: string } | null
@@ -27,25 +23,10 @@ type Overlay = { kind: "filters" } | { kind: "detail"; pubkey: string } | null
 export const App = () => {
   const { t } = useTranslation()
 
-  const [providers, setProviders] = useState<Provider[]>([])
-  const [range, setRange] = useState<FiltersRange | null>(null)
   const [filters, setFilters] = useState<FiltersData>(NO_FILTERS)
   const [draft, setDraft] = useState<FiltersData>(NO_FILTERS)
-  const [loading, setLoading] = useState(true)
-  const [failure, setFailure] = useState<{ status: number | null } | null>(null)
-  const [reloadToken, setReloadToken] = useState(0)
-  const [fetchedAt, setFetchedAt] = useState(0)
-
-  const [query, setQuery] = useState("")
-  const [sortField, setSortField] = useState<SortField>("rating")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const [favorites, setFavorites] = useState<string[]>(() => readStoredStrings(FAVORITES_KEY))
-  const [limit, setLimit] = useState(PAGE_SIZE)
 
-  const [hashes, setHashes] = useState<{ storage: string[]; provider: string[] }>({
-    storage: [],
-    provider: [],
-  })
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [scrolledDown, setScrolledDown] = useState(false)
@@ -54,32 +35,7 @@ export const App = () => {
   const copyTimer = useRef<number>(0)
   const footerRef = useRef<HTMLElement>(null)
 
-  useEffect(() => {
-    const controller = new AbortController()
-
-    setLoading(true)
-    setFailure(null)
-
-    fetchProviders(filters, controller.signal)
-      .then((loaded) => {
-        if (controller.signal.aborted) return
-        const now = Math.floor(Date.now() / 1000)
-        setProviders(loaded)
-        setHashes((current) => collectHashes(loaded, current))
-        setFetchedAt(now)
-        setLimit(PAGE_SIZE)
-        if (isPristine(filters)) setRange(deriveFiltersRange(loaded, now))
-      })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return
-        setFailure({ status: error instanceof ApiError ? error.status : null })
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false)
-      })
-
-    return () => controller.abort()
-  }, [filters, reloadToken])
+  const catalog = useCatalog(filters, favorites)
 
   useEffect(() => {
     const onScroll = () => setScrolledDown(window.scrollY > 320)
@@ -131,47 +87,14 @@ export const App = () => {
     )
   }, [])
 
-  const sorted = useMemo(() => {
-    const matched = providers.filter((provider) => matchesQuery(provider, query))
-    return sortProviders(matched, sortField, sortDirection)
-  }, [providers, query, sortField, sortDirection])
+  const activeFilters = useMemo(() => countActiveFilters(filters, catalog.range), [filters, catalog.range])
+  const draftFilters = useMemo(() => countActiveFilters(draft, catalog.range), [draft, catalog.range])
 
-  const rows = useMemo(() => sorted.slice(0, limit).map((provider) => toRow(provider, t)), [sorted, limit, t])
-
-  const pinned = useMemo(
-    () => sorted.filter((provider) => favorites.includes(provider.pubkey)).map((provider) => toRow(provider, t)),
-    [sorted, favorites, t],
-  )
-
-  const activeFilters = useMemo(() => countActiveFilters(filters, range), [filters, range])
-  const draftFilters = useMemo(() => countActiveFilters(draft, range), [draft, range])
-
-  const filterOptions = useMemo(
-    () => ({
-      locations: range?.locations ?? [],
-      storageHashes: hashes.storage,
-      providerHashes: hashes.provider,
-    }),
-    [range, hashes],
-  )
-
+  const { detailFor } = catalog
   const detailKey = overlay?.kind === "detail" ? overlay.pubkey : null
-  const detail = useMemo(() => {
-    const provider = providers.find((item) => item.pubkey === detailKey)
-    return provider ? toDetail(provider, fetchedAt, t) : null
-  }, [providers, detailKey, fetchedAt, t])
+  const detail = useMemo(() => (detailKey ? detailFor(detailKey) : null), [detailFor, detailKey])
 
   const closeOverlay = useCallback(() => setOverlay(null), [])
-  const showSkeleton = loading && providers.length === 0
-
-  const handleSort = (field: SortField) => {
-    if (field !== sortField) {
-      setSortField(field)
-      setSortDirection("desc")
-      return
-    }
-    setSortDirection((current) => (current === "asc" ? "desc" : "asc"))
-  }
 
   const resetFilters = () => {
     setFilters(NO_FILTERS)
@@ -200,16 +123,13 @@ export const App = () => {
               type="text"
               name="search"
               autoComplete="off"
-              value={query}
+              value={catalog.query}
               placeholder={t("ui.search")}
               aria-label={t("ui.search")}
-              onChange={(event) => {
-                setQuery(event.target.value)
-                setLimit(PAGE_SIZE)
-              }}
+              onChange={(event) => catalog.setQuery(event.target.value)}
             />
-            {query && (
-              <IconButton className={styles.clear} label={t("ui.clear")} onClick={() => setQuery("")}>
+            {catalog.query && (
+              <IconButton className={styles.clear} label={t("ui.clear")} onClick={() => catalog.setQuery("")}>
                 <X className={styles.clearIcon} aria-hidden="true" />
               </IconButton>
             )}
@@ -220,26 +140,26 @@ export const App = () => {
           </span>
         </div>
 
-        {failure && (
+        {catalog.failure && (
           <div className={styles.state}>
             <p>{t("errors.failedToLoadProviders")}</p>
-            {failure.status !== null && (
-              <p className={styles.errorCode}>{t("errors.statusCode", { status: failure.status })}</p>
+            {catalog.failure.status !== null && (
+              <p className={styles.errorCode}>{t("errors.statusCode", { status: catalog.failure.status })}</p>
             )}
-            <button type="button" className={styles.linkButton} onClick={() => setReloadToken((n) => n + 1)}>
+            <button type="button" className={styles.linkButton} onClick={catalog.retry}>
               {t("buttons.retry")}
             </button>
           </div>
         )}
 
-        {!loading && !failure && sorted.length === 0 && (
+        {!catalog.loading && !catalog.failure && catalog.total === 0 && (
           <div className={styles.state}>
             <p>{t("table.providersNotFound")}</p>
             <button
               type="button"
               className={styles.linkButton}
               onClick={() => {
-                setQuery("")
+                catalog.setQuery("")
                 resetFilters()
               }}
             >
@@ -248,35 +168,33 @@ export const App = () => {
           </div>
         )}
 
-        {!failure && (showSkeleton || sorted.length > 0) && (
+        {!catalog.failure && (catalog.showSkeleton || catalog.total > 0) && (
           <div className={styles.results}>
             <ProviderList
-              rows={rows}
-              pinned={pinned}
+              rows={catalog.rows}
+              pinned={catalog.pinned}
               favorites={favorites}
               copiedKey={copiedKey}
-              sortField={sortField}
-              sortDirection={sortDirection}
+              sortField={catalog.sortField}
+              sortDirection={catalog.sortDirection}
               filtersActive={activeFilters > 0}
-              loading={showSkeleton}
+              loading={catalog.showSkeleton}
               skeletonRows={PAGE_SIZE}
               pinnedSkeletonRows={favorites.length}
-              onSort={handleSort}
+              onSort={catalog.toggleSort}
               onToggleFavorite={toggleFavorite}
               onCopy={copy}
               onOpen={(pubkey) => setOverlay({ kind: "detail", pubkey })}
               onOpenFilters={openFilters}
             />
 
-            {!showSkeleton && (
+            {!catalog.showSkeleton && (
               <div className={styles.more}>
-                <span className={styles.showing}>{t("ui.showing", { shown: rows.length, total: sorted.length })}</span>
-                {rows.length < sorted.length && (
-                  <button
-                    type="button"
-                    className={styles.moreButton}
-                    onClick={() => setLimit((current) => current + PAGE_SIZE)}
-                  >
+                <span className={styles.showing}>
+                  {t("ui.showing", { shown: catalog.rows.length, total: catalog.total })}
+                </span>
+                {catalog.rows.length < catalog.total && (
+                  <button type="button" className={styles.moreButton} onClick={catalog.loadMore}>
                     {t("buttons.loadMore")}
                   </button>
                 )}
@@ -317,7 +235,7 @@ export const App = () => {
             </button>
           }
         >
-          <Filters value={draft} range={range} options={filterOptions} onChange={setDraft} />
+          <Filters value={draft} range={catalog.range} options={catalog.options} onChange={setDraft} />
         </Sheet>
 
         <Sheet open={overlay?.kind === "detail"} label={t("provider.providerTitle")} onClose={closeOverlay}>
