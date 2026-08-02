@@ -39,7 +39,10 @@ const providersOf = (data: unknown): Provider[] => {
     throw new Error("unexpected providers response shape")
   }
 
-  return list.filter((item): item is Provider => typeof item === "object" && item !== null)
+  return list.filter(
+    (item): item is Provider =>
+      typeof item === "object" && item !== null && typeof (item as Provider).pubkey === "string",
+  )
 }
 
 export const fetchProviders = async (filters: FiltersData, signal: AbortSignal): Promise<Provider[]> => {

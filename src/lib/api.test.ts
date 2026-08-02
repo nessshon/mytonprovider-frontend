@@ -56,6 +56,12 @@ describe("fetchProviders", () => {
     await expect(fetchProviders({}, signal())).resolves.toEqual([])
   })
 
+  it("drops entries the catalog sends without a key", async () => {
+    respondWith([{ providers: [stable, {}, { pubkey: 42 }] }])
+
+    await expect(fetchProviders({}, signal())).resolves.toEqual([stable])
+  })
+
   it("reports the status code when the catalog refuses", async () => {
     vi.stubGlobal("fetch", () => Promise.resolve(new Response("rate limited", { status: 429 })))
 
