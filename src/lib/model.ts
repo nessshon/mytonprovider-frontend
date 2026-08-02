@@ -361,7 +361,7 @@ export const toDetail = (provider: Provider, fetchedAt: number, t: Translate): P
           label: t("provider.address"),
           value: shortenMiddle(provider.address, 6, 6),
           title: provider.address,
-          href: `https://tonscan.org/address/${provider.address}`,
+          href: `https://tonscan.org/address/${encodeURIComponent(provider.address)}`,
           copy: provider.address,
           mono: true,
         },
