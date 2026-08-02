@@ -43,7 +43,7 @@ export interface Provider {
   max_span: number
   max_bag_size_bytes: number
   reg_time: number
-  last_online_check_time: number
+  last_online_check_time: number | null
   is_send_telemetry: boolean
   telemetry: Telemetry | null
   statuses_reason_stats?: StatusReasonStat[]
