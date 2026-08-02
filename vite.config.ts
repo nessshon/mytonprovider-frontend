@@ -1,7 +1,15 @@
 import { createHash } from "node:crypto"
+import { readFileSync } from "node:fs"
 import react from "@vitejs/plugin-react-swc"
 import { defineConfig, loadEnv } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
+
+const backgroundOf = (selector: string): string => {
+  const tokens = readFileSync("src/styles/tokens.css", "utf8")
+  const found = /--bg:\s*(#[0-9a-f]{3,8})/i.exec(tokens.slice(tokens.indexOf(selector)))
+  if (!found) throw new Error(`no --bg under ${selector}`)
+  return found[1]
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "")
@@ -13,8 +21,12 @@ export default defineConfig(({ mode }) => {
       react(),
       tsconfigPaths(),
       {
-        name: "site-url",
-        transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", siteUrl),
+        name: "index-values",
+        transformIndexHtml: (html) =>
+          html
+            .replaceAll("%SITE_URL%", siteUrl)
+            .replaceAll("%BG_LIGHT%", backgroundOf(":root {"))
+            .replaceAll("%BG_DARK%", backgroundOf('[data-theme="dark"] {')),
       },
       {
         name: "preload-fonts",

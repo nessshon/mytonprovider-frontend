@@ -1,44 +1,14 @@
-import { useEffect, useState } from "react"
-import { flushSync } from "react-dom"
 import { Moon, Sun } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { THEME_KEY, readStored, writeStored } from "@/lib/storage"
-import { applyThemeColor, scrollToTop, spreadTheme } from "@/lib/dom"
+import { useTheme } from "@/lib/theme"
+import { scrollToTop } from "@/lib/dom"
 import logo from "./logo.svg"
 import { IconButton } from "./icon-button"
 import styles from "./header.module.css"
 
 export default function Header() {
   const { t, i18n } = useTranslation()
-  const [dark, setDark] = useState(() => document.documentElement.getAttribute("data-theme") === "dark")
-
-  useEffect(() => {
-    const root = document.documentElement
-    const scheme = window.matchMedia("(prefers-color-scheme: dark)")
-
-    const onScheme = () => {
-      if (readStored(THEME_KEY)) return
-      root.setAttribute("data-theme", scheme.matches ? "dark" : "light")
-      applyThemeColor()
-      setDark(scheme.matches)
-    }
-
-    scheme.addEventListener("change", onScheme)
-    return () => scheme.removeEventListener("change", onScheme)
-  }, [])
-
-  const toggleTheme = (origin: DOMRect) => {
-    const next = dark ? "light" : "dark"
-
-    writeStored(THEME_KEY, next)
-    spreadTheme(origin, () =>
-      flushSync(() => {
-        document.documentElement.setAttribute("data-theme", next)
-        applyThemeColor()
-        setDark((current) => !current)
-      }),
-    )
-  }
+  const { dark, toggle } = useTheme()
 
   return (
     <header className={styles.header}>
@@ -70,7 +40,7 @@ export default function Header() {
         <IconButton
           size="lg"
           label={t("ui.theme")}
-          onClick={(event) => toggleTheme(event.currentTarget.getBoundingClientRect())}
+          onClick={(event) => toggle(event.currentTarget.getBoundingClientRect())}
         >
           {dark ? <Sun className={styles.icon} aria-hidden="true" /> : <Moon className={styles.icon} aria-hidden="true" />}
         </IconButton>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="%BG_LIGHT%" />
     <title>TON Provider Explorer</title>
     <meta name="description" content="Catalog of TON Storage providers: search, sorting, filters, status and telemetry" />
     <link rel="canonical" href="%SITE_URL%/" />
@@ -31,7 +31,7 @@
           theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
         }
         document.documentElement.dataset.theme = theme
-        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#0e0e11" : "#ffffff"
+        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "%BG_DARK%" : "%BG_LIGHT%"
       })()
     </script>
   </head>
