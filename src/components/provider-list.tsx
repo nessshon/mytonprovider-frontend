@@ -154,7 +154,8 @@ const ProviderCard = ({ row, index, favorite, copied, onToggleFavorite, onCopy, 
       <div className={styles.head}>
         <IconButton
           size="sm"
-          label={t("ui.favorites")}
+          label={`${t("ui.favorites")} ${row.keyShort}`}
+          aria-pressed={favorite}
           className={cx(styles.favorite, styles.orderFavorite, favorite && styles.favoriteActive)}
           onClick={(event) => {
             event.stopPropagation()
@@ -166,7 +167,7 @@ const ProviderCard = ({ row, index, favorite, copied, onToggleFavorite, onCopy, 
 
         <div className={cx(styles.key, styles.orderKey)}>
           <span className={styles.keyText}>{row.keyShort}</span>
-          <CopyButton value={row.pubkey} copied={copied} onCopy={onCopy} />
+          <CopyButton value={row.pubkey} copied={copied} onCopy={onCopy} label={`${t("ui.copy")} ${row.keyShort}`} />
         </div>
 
         <span className={cx(styles.status, styles.orderStatus)} data-tone={row.status.tone}>

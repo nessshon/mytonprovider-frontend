@@ -33,6 +33,7 @@ export const App = () => {
   const [footerVisible, setFooterVisible] = useState(false)
 
   const copyTimer = useRef<number>(0)
+  const searchRef = useRef<HTMLInputElement>(null)
   const footerRef = useRef<HTMLElement>(null)
 
   const catalog = useCatalog(filters, favorites)
@@ -109,7 +110,7 @@ export const App = () => {
   return (
     <div className={styles.shell}>
       <Header />
-      <main id="top" className={styles.main}>
+      <main id="top" tabIndex={-1} className={styles.main}>
         <div className={styles.hero}>
           <h1 className={styles.title}>{t("mainTitle")}</h1>
           <p className={styles.subtitle}>{t("mainDescription")}</p>
@@ -119,6 +120,7 @@ export const App = () => {
           <div className={styles.search}>
             <Search className={styles.searchIcon} aria-hidden="true" />
             <input
+              ref={searchRef}
               className={styles.searchInput}
               type="text"
               name="search"
@@ -129,7 +131,14 @@ export const App = () => {
               onChange={(event) => catalog.setQuery(event.target.value)}
             />
             {catalog.query && (
-              <IconButton className={styles.clear} label={t("ui.clear")} onClick={() => catalog.setQuery("")}>
+              <IconButton
+                className={styles.clear}
+                label={t("ui.clear")}
+                onClick={() => {
+                  catalog.setQuery("")
+                  searchRef.current?.focus()
+                }}
+              >
                 <X className={styles.clearIcon} aria-hidden="true" />
               </IconButton>
             )}
@@ -141,7 +150,7 @@ export const App = () => {
         </div>
 
         {catalog.failure && (
-          <div className={styles.state}>
+          <div className={styles.state} role="status">
             <p>{t("errors.failedToLoadProviders")}</p>
             {catalog.failure.status !== null && (
               <p className={styles.errorCode}>{t("errors.statusCode", { status: catalog.failure.status })}</p>
@@ -153,7 +162,7 @@ export const App = () => {
         )}
 
         {!catalog.loading && !catalog.failure && catalog.total === 0 && (
-          <div className={styles.state}>
+          <div className={styles.state} role="status">
             <p>{t("table.providersNotFound")}</p>
             <button
               type="button"
@@ -190,7 +199,7 @@ export const App = () => {
 
             {!catalog.showSkeleton && (
               <div className={styles.more}>
-                <span className={styles.showing}>
+                <span className={styles.showing} role="status">
                   {t("ui.showing", { shown: catalog.rows.length, total: catalog.total })}
                 </span>
                 {catalog.rows.length < catalog.total && (
@@ -209,7 +218,10 @@ export const App = () => {
             className={styles.fab}
             title={t("buttons.goUp")}
             aria-label={t("buttons.goUp")}
-            onClick={scrollToTop}
+            onClick={() => {
+              scrollToTop()
+              document.getElementById("top")?.focus()
+            }}
           >
             <ArrowUp className={styles.fabIcon} aria-hidden="true" />
           </button>

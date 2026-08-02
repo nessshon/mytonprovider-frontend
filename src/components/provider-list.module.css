@@ -142,7 +142,6 @@
 }
 
 .card:focus-visible {
-  outline: none;
   background: var(--surface-2);
 }
 

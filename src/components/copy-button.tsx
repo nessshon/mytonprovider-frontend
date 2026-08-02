@@ -8,16 +8,17 @@ interface CopyButtonProps {
   value: string
   copied: boolean
   onCopy: (value: string) => void
+  label?: string
   className?: string
 }
 
-export const CopyButton = ({ value, copied, onCopy, className }: CopyButtonProps) => {
+export const CopyButton = ({ value, copied, onCopy, label, className }: CopyButtonProps) => {
   const { t } = useTranslation()
 
   return (
     <IconButton
       size="xs"
-      label={t("ui.copy")}
+      label={label ?? t("ui.copy")}
       className={cx(copied && styles.copied, className)}
       onClick={(event) => {
         event.stopPropagation()
