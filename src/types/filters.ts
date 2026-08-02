@@ -65,10 +65,10 @@ export interface FiltersData {
   benchmark_disk_read_speed_lt?: number
   benchmark_disk_write_speed_gt?: number
   benchmark_disk_write_speed_lt?: number
-  speedtest_download_speed_gt?: number
-  speedtest_download_speed_lt?: number
-  speedtest_upload_speed_gt?: number
-  speedtest_upload_speed_lt?: number
+  speedtest_download_gt?: number
+  speedtest_download_lt?: number
+  speedtest_upload_gt?: number
+  speedtest_upload_lt?: number
   speedtest_ping_gt?: number
   speedtest_ping_lt?: number
 }

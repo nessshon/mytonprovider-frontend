@@ -96,6 +96,14 @@ describe("setting a value", () => {
     expect(rating.set(0.05, rating.high).rating_gt).toBe(0.05)
   })
 
+  it("sends internet speed under the key the catalog answers to, in bits per second", () => {
+    const download = range_("filters.downloadSpeed")
+    const upload = range_("filters.uploadSpeed")
+
+    expect(download.set(100, download.high).speedtest_download_gt).toBe(100_000_000)
+    expect(upload.set(50, upload.high).speedtest_upload_gt).toBe(50_000_000)
+  })
+
   it("stores scaled ranges in the units the catalog expects", () => {
     const maxSpan = range_("filters.maxSpan")
 

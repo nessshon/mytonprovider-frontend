@@ -192,27 +192,23 @@ export const FILTER_GROUPS: FilterGroup[] = [
     fields: [
       {
         kind: "range",
-        from: "speedtest_download_speed_gt",
-        to: "speedtest_download_speed_lt",
+        from: "speedtest_download_gt",
+        to: "speedtest_download_lt",
         label: "filters.downloadSpeed",
         step: 1,
         integer: true,
-        bounds: (r) => [
-          Math.floor((r?.speedtest_download_min ?? 0) / 1e6),
-          Math.ceil((r?.speedtest_download_max ?? 1e9) / 1e6),
-        ],
+        scale: 1e6,
+        bounds: (r) => [r?.speedtest_download_min ?? 0, r?.speedtest_download_max ?? 1e9],
       },
       {
         kind: "range",
-        from: "speedtest_upload_speed_gt",
-        to: "speedtest_upload_speed_lt",
+        from: "speedtest_upload_gt",
+        to: "speedtest_upload_lt",
         label: "filters.uploadSpeed",
         step: 1,
         integer: true,
-        bounds: (r) => [
-          Math.floor((r?.speedtest_upload_min ?? 0) / 1e6),
-          Math.ceil((r?.speedtest_upload_max ?? 1e9) / 1e6),
-        ],
+        scale: 1e6,
+        bounds: (r) => [r?.speedtest_upload_min ?? 0, r?.speedtest_upload_max ?? 1e9],
       },
       {
         kind: "range",
