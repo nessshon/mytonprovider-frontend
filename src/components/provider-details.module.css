@@ -111,10 +111,10 @@
 
 .toggle {
   composes: textButton from "./shared.module.css";
-  height: 28px;
-  padding: 0 var(--space-3);
-  margin-right: calc(-1 * var(--space-3));
-  border-radius: var(--radius-sm);
+  height: var(--control-sm);
+  padding: 0 var(--space-4);
+  margin-right: calc(-1 * var(--space-4));
+  border-radius: var(--radius-pill);
   color: var(--accent-text);
   font-weight: 500;
 }

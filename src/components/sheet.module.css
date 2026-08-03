@@ -74,16 +74,16 @@
 }
 
 .reset {
+  composes: outline from "./shared.module.css";
   height: var(--control-sm);
   padding: 0 var(--pad-pill);
-  border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  background: var(--surface);
   color: var(--tone-red-text);
   font-size: var(--font-sm);
+  font-weight: 500;
 }
 
-.reset:hover {
+.reset.reset:hover {
   border-color: var(--tone-red-text);
   background: var(--tone-red-weak);
 }
