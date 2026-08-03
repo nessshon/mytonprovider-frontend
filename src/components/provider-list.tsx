@@ -7,6 +7,7 @@ import { IconButton } from "./icon-button"
 import { FilterButton } from "./filter-button"
 import styles from "./provider-list.module.css"
 import { cx } from "@/lib/cx"
+import { providerUrl } from "@/lib/route"
 
 type StatId = "rating" | "uptime" | "price" | "freeSpace" | "workingTime" | "location"
 
@@ -14,7 +15,7 @@ interface Column {
   id: StatId | "pubkey" | "status"
   label: string
   hint?: string
-  sort?: SortField
+  sort: SortField
 }
 
 const COLUMNS: Column[] = [
@@ -77,8 +78,8 @@ const STAT_VALUES: Record<StatId, (row: ProviderRow) => ReactNode> = {
 }
 
 interface CardProps {
-  shared: boolean
   onShare: (pubkey: string) => void
+  sharedUrl: boolean
   row: ProviderRow
   index: number
   favorite: boolean
@@ -107,6 +108,8 @@ const SkeletonCard = ({ index }: { index: number }) => {
         <span className={cx(styles.status, styles.orderStatus)}>
           <span className={shape(styles.shapeStatus)} />
         </span>
+
+        <span className={cx(shape(styles.shapeCircleSm), styles.orderShare)} />
       </div>
 
       <div className={styles.stats}>
@@ -135,7 +138,7 @@ const Cell = ({ id, label, children }: { id: StatId; label: string; children: Re
   </div>
 )
 
-const ProviderCard = ({ row, index, favorite, copied, shared, onToggleFavorite, onCopy, onShare, onOpen }: CardProps) => {
+const ProviderCard = ({ row, index, favorite, copied, sharedUrl, onToggleFavorite, onCopy, onShare, onOpen }: CardProps) => {
   const { t } = useTranslation()
 
   return (
@@ -187,7 +190,7 @@ const ProviderCard = ({ row, index, favorite, copied, shared, onToggleFavorite, 
             onShare(row.pubkey)
           }}
         >
-          {shared ? (
+          {sharedUrl ? (
             <Check className={styles.shareIcon} aria-hidden="true" />
           ) : (
             <ArrowUpRight className={styles.shareIcon} aria-hidden="true" />
@@ -211,7 +214,6 @@ interface ProviderListProps {
   pinned: ProviderRow[]
   favorites: string[]
   copiedKey: string | null
-  sharedKey: string | null
   sortField: SortField
   sortDirection: SortDirection
   filtersActive: boolean
@@ -231,7 +233,6 @@ export const ProviderList = ({
   pinned,
   favorites,
   copiedKey,
-  sharedKey,
   sortField,
   sortDirection,
   filtersActive,
@@ -254,7 +255,7 @@ export const ProviderList = ({
       index={index % STAGGER_LIMIT}
       favorite={favorites.includes(row.pubkey)}
       copied={copiedKey === row.pubkey}
-      shared={sharedKey === row.pubkey}
+      sharedUrl={copiedKey === providerUrl(row.pubkey)}
       onToggleFavorite={onToggleFavorite}
       onCopy={onCopy}
       onShare={onShare}
@@ -277,8 +278,8 @@ export const ProviderList = ({
       <div className={styles.headerRow}>
         <span />
         {COLUMNS.map((column) => {
-          const isActive = column.sort !== undefined && column.sort === sortField
-          const className = cx(styles.headerCell, column.sort && styles.sortable, isActive && styles.active)
+          const isActive = column.sort === sortField
+          const className = cx(styles.headerCell, styles.sortable, isActive && styles.active)
 
           const content = (
             <>
@@ -297,16 +298,10 @@ export const ProviderList = ({
             </>
           )
 
-          const sort = column.sort
-
-          return sort ? (
-            <button key={column.id} type="button" className={className} onClick={() => onSort(sort)}>
+          return (
+            <button key={column.id} type="button" className={className} onClick={() => onSort(column.sort)}>
               {content}
             </button>
-          ) : (
-            <span key={column.id} className={className}>
-              {content}
-            </span>
           )
         })}
         <span />
@@ -323,7 +318,7 @@ export const ProviderList = ({
             aria-label={t("ui.sortBy")}
             onChange={(event) => onSort(event.target.value as SortField)}
           >
-            {COLUMNS.filter((column) => column.sort).map((column) => (
+            {COLUMNS.map((column) => (
               <option key={column.id} value={column.sort}>
                 {t(column.label)}
               </option>

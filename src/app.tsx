@@ -19,6 +19,26 @@ import styles from "./app.module.css"
 
 const COPIED_RESET_MS = 1200
 
+interface LoadFailureProps {
+  status: number | null
+  compact: boolean
+  onRetry: () => void
+}
+
+const LoadFailure = ({ status, compact, onRetry }: LoadFailureProps) => {
+  const { t } = useTranslation()
+
+  return (
+    <div className={styles.state} role="status" data-compact={compact}>
+      <p>{t("errors.failedToLoadProviders")}</p>
+      {status !== null && <p className={styles.errorCode}>{t("errors.statusCode", { status })}</p>}
+      <button type="button" className={styles.linkButton} onClick={onRetry}>
+        {t("buttons.retry")}
+      </button>
+    </div>
+  )
+}
+
 export const App = () => {
   const { t } = useTranslation()
 
@@ -29,12 +49,10 @@ export const App = () => {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [detailKey, openProvider] = useOpenProvider()
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
-  const [sharedKey, setSharedKey] = useState<string | null>(null)
   const [scrolledDown, setScrolledDown] = useState(false)
   const [footerVisible, setFooterVisible] = useState(false)
 
   const copyTimer = useRef<number>(0)
-  const shareTimer = useRef<number>(0)
   const searchRef = useRef<HTMLInputElement>(null)
   const footerRef = useRef<HTMLElement>(null)
 
@@ -75,10 +93,7 @@ export const App = () => {
     writeStored(FAVORITES_KEY, JSON.stringify(favorites))
   }, [favorites])
 
-  useEffect(() => () => {
-    window.clearTimeout(copyTimer.current)
-    window.clearTimeout(shareTimer.current)
-  }, [])
+  useEffect(() => () => window.clearTimeout(copyTimer.current), [])
 
   const copy = useCallback((value: string) => {
     void copyText(value).then((done) => {
@@ -89,21 +104,19 @@ export const App = () => {
     })
   }, [])
 
-  const share = useCallback((pubkey: string) => {
-    const url = providerUrl(pubkey)
+  const share = useCallback(
+    (pubkey: string) => {
+      const url = providerUrl(pubkey)
 
-    if (typeof navigator.share === "function") {
-      void navigator.share({ url }).catch(() => undefined)
-      return
-    }
+      if (typeof navigator.share === "function") {
+        void navigator.share({ url }).catch(() => undefined)
+        return
+      }
 
-    void copyText(url).then((done) => {
-      if (!done) return
-      setSharedKey(pubkey)
-      window.clearTimeout(shareTimer.current)
-      shareTimer.current = window.setTimeout(() => setSharedKey(null), COPIED_RESET_MS)
-    })
-  }, [])
+      copy(url)
+    },
+    [copy],
+  )
 
   const toggleFavorite = useCallback((pubkey: string) => {
     setFavorites((current) =>
@@ -114,7 +127,7 @@ export const App = () => {
   const match = useMatchCount({
     draft,
     applied: filters,
-    appliedTotal: catalog.total,
+    appliedTotal: catalog.showSkeleton ? null : catalog.total,
     query: catalog.query,
     active: filtersOpen,
   })
@@ -128,8 +141,8 @@ export const App = () => {
   const closeFilters = useCallback(() => setFiltersOpen(false), [])
 
   useEffect(() => {
-    if (detailKey !== null && !catalog.loading && !detail) openProvider(null)
-  }, [detailKey, detail, catalog.loading, openProvider])
+    if (detailKey !== null && !catalog.loading && !catalog.failure && !detail) openProvider(null)
+  }, [detailKey, detail, catalog.loading, catalog.failure, openProvider])
 
   const resetFilters = () => {
     setFilters(NO_FILTERS)
@@ -184,15 +197,7 @@ export const App = () => {
         </div>
 
         {catalog.failure && (
-          <div className={styles.state} role="status" data-compact={catalog.total > 0}>
-            <p>{t("errors.failedToLoadProviders")}</p>
-            {catalog.failure.status !== null && (
-              <p className={styles.errorCode}>{t("errors.statusCode", { status: catalog.failure.status })}</p>
-            )}
-            <button type="button" className={styles.linkButton} onClick={catalog.retry}>
-              {t("buttons.retry")}
-            </button>
-          </div>
+          <LoadFailure status={catalog.failure.status} compact={catalog.total > 0} onRetry={catalog.retry} />
         )}
 
         {!catalog.loading && !catalog.failure && catalog.total === 0 && (
@@ -218,7 +223,6 @@ export const App = () => {
               pinned={catalog.pinned}
               favorites={favorites}
               copiedKey={copiedKey}
-              sharedKey={sharedKey}
               sortField={catalog.sortField}
               sortDirection={catalog.sortDirection}
               filtersActive={activeFilters > 0}
@@ -286,15 +290,20 @@ export const App = () => {
             </button>
           }
         >
-          <Filters value={draft} range={catalog.range} options={catalog.options} onChange={setDraft} />
+          {filtersOpen && (
+            <Filters value={draft} range={catalog.range} options={catalog.options} onChange={setDraft} />
+          )}
         </Sheet>
 
         <Sheet open={detailKey !== null} label={t("provider.providerTitle")} onClose={() => openProvider(null)}>
-          {detail && detailKey ? (
-            <ProviderDetails key={detailKey} detail={detail} copiedKey={copiedKey} onCopy={copy} />
-          ) : (
-            <ProviderDetailsSkeleton />
-          )}
+          {detailKey !== null &&
+            (detail ? (
+              <ProviderDetails key={detailKey} detail={detail} copiedKey={copiedKey} onCopy={copy} />
+            ) : catalog.failure ? (
+              <LoadFailure status={catalog.failure.status} compact={false} onRetry={catalog.retry} />
+            ) : (
+              <ProviderDetailsSkeleton />
+            ))}
         </Sheet>
       </main>
       <Footer ref={footerRef} />

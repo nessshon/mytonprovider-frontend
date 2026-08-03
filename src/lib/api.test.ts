@@ -56,6 +56,14 @@ describe("fetchProviders", () => {
     await expect(fetchProviders({}, signal())).resolves.toEqual([])
   })
 
+  it("keeps walking pages when the catalog mixes in entries it cannot use", async () => {
+    const dirty = { providers: [...Array.from({ length: 197 }, () => stable), {}, {}, {}] }
+    const calls = respondWith([dirty, page(50)])
+
+    await expect(fetchProviders({}, signal())).resolves.toHaveLength(247)
+    expect(calls.map((body) => (JSON.parse(body) as { offset: number }).offset)).toEqual([0, 200])
+  })
+
   it("drops entries the catalog sends without a key", async () => {
     respondWith([{ providers: [stable, {}, { pubkey: 42 }] }])
 

@@ -219,7 +219,7 @@ const sortValue = (provider: Provider, field: SortField): string | number => {
       return provider.rating
     case "status": {
       const { key } = classify(provider.status, provider.status_ratio)
-      return (STATUS_ORDER[key] ?? 0) + passedShare(provider)
+      return STATUS_ORDER[key] + passedShare(provider)
     }
     case "freeSpace":
       return freeSpaceOf(provider) ?? -1

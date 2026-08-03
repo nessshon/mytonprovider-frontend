@@ -28,7 +28,7 @@ const request = async (path: string, init: RequestInit): Promise<unknown> => {
   return response.json()
 }
 
-const providersOf = (data: unknown): Provider[] => {
+const pageOf = (data: unknown): unknown[] => {
   if (typeof data !== "object" || data === null || !("providers" in data)) {
     throw new Error("unexpected providers response shape")
   }
@@ -39,26 +39,29 @@ const providersOf = (data: unknown): Provider[] => {
     throw new Error("unexpected providers response shape")
   }
 
-  return list.filter(
-    (item): item is Provider =>
-      typeof item === "object" && item !== null && typeof (item as { pubkey?: unknown }).pubkey === "string",
-  )
+  return list
 }
+
+const isProvider = (item: unknown): item is Provider =>
+  typeof item === "object" && item !== null && typeof (item as { pubkey?: unknown }).pubkey === "string"
+
 
 export const fetchProviders = async (filters: FiltersData, signal: AbortSignal): Promise<Provider[]> => {
   const providers: Provider[] = []
+  let offset = 0
 
   for (;;) {
     const data = await request("/providers/search", {
       method: "POST",
       signal,
-      body: JSON.stringify({ filters, exact: [], limit: PAGE_LIMIT, offset: providers.length }),
+      body: JSON.stringify({ filters, exact: [], limit: PAGE_LIMIT, offset }),
     })
 
-    const batch = providersOf(data)
-    providers.push(...batch)
+    const page = pageOf(data)
+    offset += page.length
+    providers.push(...page.filter(isProvider))
 
-    if (batch.length < PAGE_LIMIT || providers.length >= MAX_PROVIDERS) {
+    if (page.length < PAGE_LIMIT || offset >= MAX_PROVIDERS) {
       return providers
     }
   }

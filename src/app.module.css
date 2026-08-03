@@ -129,6 +129,9 @@
 .results,
 .state {
   min-height: 70dvh;
+}
+
+.state {
   padding: var(--space-11) var(--space-3);
   text-align: center;
   color: var(--text-2);

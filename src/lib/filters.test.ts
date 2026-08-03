@@ -74,8 +74,9 @@ describe("activity", () => {
 
   it("counts a moved range once, not once per bound", () => {
     const rating = range_("filters.rating")
-    const moved = rating.set(0.05, rating.high)
+    const moved = rating.set(0.05, rating.high - 1)
 
+    expect(Object.keys(moved)).toHaveLength(2)
     expect(countActiveFilters(moved)).toBe(1)
     expect(view(moved)[0].active).toBe(1)
   })

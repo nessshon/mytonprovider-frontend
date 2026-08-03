@@ -4,6 +4,8 @@ const PUBKEY = /^[0-9a-f]{64}$/i
 
 const base = import.meta.env.BASE_URL
 
+const OPENED = "provider"
+
 const pubkeyOf = (path: string): string | null => {
   const rest = path.startsWith(base) ? path.slice(base.length) : path.replace(/^\//, "")
   const candidate = rest.replace(/\/$/, "")
@@ -32,9 +34,17 @@ export const useOpenProvider = (): [string | null, (pubkey: string | null) => vo
 
   const open = useCallback((next: string | null) => {
     const path = next ? `${base}${next}` : base
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, "", `${path}${window.location.search}`)
+    if (window.location.pathname === path) {
+      setPubkey(next)
+      return
     }
+
+    if (next === null && window.history.state === OPENED) {
+      window.history.back()
+      return
+    }
+
+    window.history.pushState(next === null ? null : OPENED, "", `${path}${window.location.search}`)
     setPubkey(next)
   }, [])
 

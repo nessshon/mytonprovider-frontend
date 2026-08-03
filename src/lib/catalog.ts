@@ -89,7 +89,6 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
         const now = Math.floor(Date.now() / 1000)
         loadedAt.current = Date.now()
         setSnapshot((current) => nextSnapshot(current, loaded, filters, now))
-        setLimit(PAGE_SIZE)
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
@@ -112,6 +111,10 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
     document.addEventListener("visibilitychange", onVisible)
     return () => document.removeEventListener("visibilitychange", onVisible)
   }, [])
+
+  useEffect(() => {
+    setLimit(PAGE_SIZE)
+  }, [filters])
 
   const sorted = useMemo(() => {
     const matched = snapshot.providers.filter((provider) => matchesQuery(provider, query))
@@ -179,7 +182,7 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
 interface MatchCountInput {
   draft: FiltersData
   applied: FiltersData
-  appliedTotal: number
+  appliedTotal: number | null
   query: string
   active: boolean
 }

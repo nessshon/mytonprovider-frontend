@@ -214,7 +214,7 @@ export const ProviderDetailsSkeleton = () => {
                 <span className={styles.spacer} />
                 <span
                   className={cx(styles.rowValue, styles.shape, styles.shapeLine)}
-                  style={line(VALUE_WIDTHS[index % VALUE_WIDTHS.length] ?? "6em")}
+                  style={line(VALUE_WIDTHS[index % VALUE_WIDTHS.length])}
                 >
                   &nbsp;
                 </span>
