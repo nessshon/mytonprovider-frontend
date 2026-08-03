@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { FiltersData, FiltersRange } from "@/types/filters"
 import type { Provider } from "@/types/provider"
@@ -9,6 +9,28 @@ import { isPristine, type OptionSource } from "./filters"
 
 export const PAGE_SIZE = 10
 const COUNT_DELAY_MS = 400
+const FRESH_FOR_MS = 120_000
+const REMEMBERED_ANSWERS = 16
+
+const answers = new Map<string, { providers: Provider[]; at: number }>()
+
+const answerKey = (filters: FiltersData): string =>
+  JSON.stringify(Object.entries(filters).sort(([left], [right]) => left.localeCompare(right)))
+
+const loadProviders = async (filters: FiltersData, signal: AbortSignal): Promise<Provider[]> => {
+  const key = answerKey(filters)
+  const remembered = answers.get(key)
+  if (remembered && Date.now() - remembered.at < FRESH_FOR_MS) return remembered.providers
+
+  const providers = await fetchProviders(filters, signal)
+  answers.delete(key)
+  answers.set(key, { providers, at: Date.now() })
+  for (const stale of answers.keys()) {
+    if (answers.size <= REMEMBERED_ANSWERS) break
+    answers.delete(stale)
+  }
+  return providers
+}
 
 interface Snapshot {
   providers: Provider[]
@@ -48,6 +70,7 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
   const [sortField, setSortField] = useState<SortField>("rating")
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const [limit, setLimit] = useState(PAGE_SIZE)
+  const loadedAt = useRef(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -55,10 +78,11 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
     setLoading(true)
     setFailure(null)
 
-    fetchProviders(filters, controller.signal)
+    loadProviders(filters, controller.signal)
       .then((loaded) => {
         if (controller.signal.aborted) return
         const now = Math.floor(Date.now() / 1000)
+        loadedAt.current = Date.now()
         setSnapshot((current) => nextSnapshot(current, loaded, filters, now))
         setLimit(PAGE_SIZE)
       })
@@ -72,6 +96,17 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
 
     return () => controller.abort()
   }, [filters, reloadToken])
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return
+      if (Date.now() - loadedAt.current < FRESH_FOR_MS) return
+      setReloadToken((current) => current + 1)
+    }
+
+    document.addEventListener("visibilitychange", onVisible)
+    return () => document.removeEventListener("visibilitychange", onVisible)
+  }, [])
 
   const sorted = useMemo(() => {
     const matched = snapshot.providers.filter((provider) => matchesQuery(provider, query))
@@ -141,14 +176,15 @@ interface MatchCountInput {
   applied: FiltersData
   appliedTotal: number
   query: string
+  active: boolean
 }
 
-export const useMatchCount = ({ draft, applied, appliedTotal, query }: MatchCountInput) => {
+export const useMatchCount = ({ draft, applied, appliedTotal, query, active }: MatchCountInput) => {
   const [total, setTotal] = useState<number | null>(appliedTotal)
   const [counting, setCounting] = useState(false)
 
   useEffect(() => {
-    if (draft === applied) {
+    if (!active || draft === applied) {
       setTotal(appliedTotal)
       setCounting(false)
       return
@@ -158,7 +194,7 @@ export const useMatchCount = ({ draft, applied, appliedTotal, query }: MatchCoun
     setCounting(true)
 
     const timer = window.setTimeout(() => {
-      fetchProviders(draft, controller.signal)
+      loadProviders(draft, controller.signal)
         .then((found) => {
           if (controller.signal.aborted) return
           setTotal(found.filter((provider) => matchesQuery(provider, query)).length)
@@ -175,7 +211,7 @@ export const useMatchCount = ({ draft, applied, appliedTotal, query }: MatchCoun
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [draft, applied, appliedTotal, query])
+  }, [draft, applied, appliedTotal, query, active])
 
   return { total, counting }
 }

@@ -93,6 +93,7 @@ export const App = () => {
     applied: filters,
     appliedTotal: catalog.total,
     query: catalog.query,
+    active: overlay?.kind === "filters",
   })
 
   const activeFilters = useMemo(() => countActiveFilters(filters, catalog.range), [filters, catalog.range])
@@ -157,7 +158,7 @@ export const App = () => {
         </div>
 
         {catalog.failure && (
-          <div className={styles.state} role="status">
+          <div className={styles.state} role="status" data-compact={catalog.total > 0}>
             <p>{t("errors.failedToLoadProviders")}</p>
             {catalog.failure.status !== null && (
               <p className={styles.errorCode}>{t("errors.statusCode", { status: catalog.failure.status })}</p>
@@ -184,7 +185,7 @@ export const App = () => {
           </div>
         )}
 
-        {!catalog.failure && (catalog.showSkeleton || catalog.total > 0) && (
+        {(catalog.showSkeleton || catalog.total > 0) && (
           <div className={styles.results}>
             <ProviderList
               rows={catalog.rows}
