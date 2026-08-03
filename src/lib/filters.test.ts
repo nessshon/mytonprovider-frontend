@@ -140,6 +140,15 @@ describe("isPristine", () => {
     const rating = range_("filters.rating")
 
     expect(isPristine(NO_FILTERS)).toBe(true)
-    expect(isPristine(rating.set(rating.low, rating.high))).toBe(false)
+    expect(isPristine(rating.set(0.05, rating.high))).toBe(false)
+  })
+
+  it("comes back once a range is dragged onto its own bounds again", () => {
+    const rating = range_("filters.rating")
+    const moved = rating.set(0.05, rating.high)
+    const back = range_("filters.rating", moved).set(rating.low, rating.high)
+
+    expect(back).toEqual({})
+    expect(isPristine(back)).toBe(true)
   })
 })

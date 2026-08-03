@@ -8,7 +8,7 @@ import { collectHashes, deriveFiltersRange, matchesQuery, sortProviders, toDetai
 import { isPristine, type OptionSource } from "./filters"
 
 export const PAGE_SIZE = 10
-const COUNT_DELAY_MS = 400
+const COUNT_DELAY_MS = 250
 const FRESH_FOR_MS = 120_000
 const REMEMBERED_ANSWERS = 16
 
@@ -17,10 +17,15 @@ const answers = new Map<string, { providers: Provider[]; at: number }>()
 const answerKey = (filters: FiltersData): string =>
   JSON.stringify(Object.entries(filters).sort(([left], [right]) => left.localeCompare(right)))
 
+const rememberedAnswer = (filters: FiltersData): Provider[] | null => {
+  const remembered = answers.get(answerKey(filters))
+  return remembered && Date.now() - remembered.at < FRESH_FOR_MS ? remembered.providers : null
+}
+
 const loadProviders = async (filters: FiltersData, signal: AbortSignal): Promise<Provider[]> => {
   const key = answerKey(filters)
-  const remembered = answers.get(key)
-  if (remembered && Date.now() - remembered.at < FRESH_FOR_MS) return remembered.providers
+  const remembered = rememberedAnswer(filters)
+  if (remembered) return remembered
 
   const providers = await fetchProviders(filters, signal)
   answers.delete(key)
@@ -190,10 +195,17 @@ export const useMatchCount = ({ draft, applied, appliedTotal, query, active }: M
       return
     }
 
+    const known = rememberedAnswer(draft)
+    if (known) {
+      setTotal(known.filter((provider) => matchesQuery(provider, query)).length)
+      setCounting(false)
+      return
+    }
+
     const controller = new AbortController()
-    setCounting(true)
 
     const timer = window.setTimeout(() => {
+      setCounting(true)
       loadProviders(draft, controller.signal)
         .then((found) => {
           if (controller.signal.aborted) return

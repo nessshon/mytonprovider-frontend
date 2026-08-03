@@ -78,6 +78,11 @@ const withValue = (filters: FiltersData, key: keyof FiltersData, next: string | 
   return draft
 }
 
+const withBound = (draft: FiltersData, key: keyof FiltersData, value: number, edge: number): void => {
+  if (value === edge) delete draft[key]
+  else Object.assign(draft, { [key]: value })
+}
+
 const textOf = (filters: FiltersData, key: keyof FiltersData): string => {
   const current = filters[key]
   return typeof current === "string" ? current : ""
@@ -113,11 +118,12 @@ const toFieldView = (
       integer: field.integer,
       low: numberOf(filters, field.from, toStored(field, min)) / scale,
       high: numberOf(filters, field.to, toStored(field, max)) / scale,
-      set: (low, high) => ({
-        ...filters,
-        [field.from]: toStored(field, low),
-        [field.to]: toStored(field, high),
-      }),
+      set: (low, high) => {
+        const draft: FiltersData = { ...filters }
+        withBound(draft, field.from, toStored(field, low), toStored(field, min))
+        withBound(draft, field.to, toStored(field, high), toStored(field, max))
+        return draft
+      },
     }
   }
 
