@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { ArrowDown, ArrowUp, ChevronDown, HelpCircle, Star } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowUpRight, Check, ChevronDown, HelpCircle, Star } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { ProviderRow, SortDirection, SortField } from "@/types/model"
 import { CopyButton } from "./copy-button"
@@ -77,6 +77,8 @@ const STAT_VALUES: Record<StatId, (row: ProviderRow) => ReactNode> = {
 }
 
 interface CardProps {
+  shared: boolean
+  onShare: (pubkey: string) => void
   row: ProviderRow
   index: number
   favorite: boolean
@@ -133,7 +135,7 @@ const Cell = ({ id, label, children }: { id: StatId; label: string; children: Re
   </div>
 )
 
-const ProviderCard = ({ row, index, favorite, copied, onToggleFavorite, onCopy, onOpen }: CardProps) => {
+const ProviderCard = ({ row, index, favorite, copied, shared, onToggleFavorite, onCopy, onShare, onOpen }: CardProps) => {
   const { t } = useTranslation()
 
   return (
@@ -175,6 +177,22 @@ const ProviderCard = ({ row, index, favorite, copied, onToggleFavorite, onCopy, 
           <span className={styles.statusLabel}>{row.status.label}</span>
           {row.status.ratio && <span className={styles.ratio}>{row.status.ratio}</span>}
         </span>
+
+        <IconButton
+          size="sm"
+          label={`${t("ui.share")} ${row.keyShort}`}
+          className={cx(styles.share, styles.orderShare)}
+          onClick={(event) => {
+            event.stopPropagation()
+            onShare(row.pubkey)
+          }}
+        >
+          {shared ? (
+            <Check className={styles.shareIcon} aria-hidden="true" />
+          ) : (
+            <ArrowUpRight className={styles.shareIcon} aria-hidden="true" />
+          )}
+        </IconButton>
       </div>
 
       <div className={styles.stats}>
@@ -193,6 +211,7 @@ interface ProviderListProps {
   pinned: ProviderRow[]
   favorites: string[]
   copiedKey: string | null
+  sharedKey: string | null
   sortField: SortField
   sortDirection: SortDirection
   filtersActive: boolean
@@ -202,6 +221,7 @@ interface ProviderListProps {
   onSort: (field: SortField) => void
   onToggleFavorite: (pubkey: string) => void
   onCopy: (pubkey: string) => void
+  onShare: (pubkey: string) => void
   onOpen: (pubkey: string) => void
   onOpenFilters: () => void
 }
@@ -211,6 +231,7 @@ export const ProviderList = ({
   pinned,
   favorites,
   copiedKey,
+  sharedKey,
   sortField,
   sortDirection,
   filtersActive,
@@ -220,6 +241,7 @@ export const ProviderList = ({
   onSort,
   onToggleFavorite,
   onCopy,
+  onShare,
   onOpen,
   onOpenFilters,
 }: ProviderListProps) => {
@@ -232,8 +254,10 @@ export const ProviderList = ({
       index={index % STAGGER_LIMIT}
       favorite={favorites.includes(row.pubkey)}
       copied={copiedKey === row.pubkey}
+      shared={sharedKey === row.pubkey}
       onToggleFavorite={onToggleFavorite}
       onCopy={onCopy}
+      onShare={onShare}
       onOpen={onOpen}
     />
   )
@@ -285,6 +309,7 @@ export const ProviderList = ({
             </span>
           )
         })}
+        <span />
       </div>
 
       <div className={styles.sortBar}>

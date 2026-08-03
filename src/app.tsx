@@ -6,7 +6,7 @@ import { PAGE_SIZE, useCatalog, useMatchCount } from "@/lib/catalog"
 import { NO_FILTERS, countActiveFilters } from "@/lib/filters"
 import { FAVORITES_KEY, readStoredStrings, writeStored } from "@/lib/storage"
 import { copyText, scrollToTop } from "@/lib/dom"
-import { useOpenProvider } from "@/lib/route"
+import { providerUrl, useOpenProvider } from "@/lib/route"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Filters } from "@/components/filters"
@@ -29,10 +29,12 @@ export const App = () => {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [detailKey, openProvider] = useOpenProvider()
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  const [sharedKey, setSharedKey] = useState<string | null>(null)
   const [scrolledDown, setScrolledDown] = useState(false)
   const [footerVisible, setFooterVisible] = useState(false)
 
   const copyTimer = useRef<number>(0)
+  const shareTimer = useRef<number>(0)
   const searchRef = useRef<HTMLInputElement>(null)
   const footerRef = useRef<HTMLElement>(null)
 
@@ -73,7 +75,10 @@ export const App = () => {
     writeStored(FAVORITES_KEY, JSON.stringify(favorites))
   }, [favorites])
 
-  useEffect(() => () => window.clearTimeout(copyTimer.current), [])
+  useEffect(() => () => {
+    window.clearTimeout(copyTimer.current)
+    window.clearTimeout(shareTimer.current)
+  }, [])
 
   const copy = useCallback((value: string) => {
     void copyText(value).then((done) => {
@@ -81,6 +86,22 @@ export const App = () => {
       setCopiedKey(value)
       window.clearTimeout(copyTimer.current)
       copyTimer.current = window.setTimeout(() => setCopiedKey(null), COPIED_RESET_MS)
+    })
+  }, [])
+
+  const share = useCallback((pubkey: string) => {
+    const url = providerUrl(pubkey)
+
+    if (typeof navigator.share === "function") {
+      void navigator.share({ url }).catch(() => undefined)
+      return
+    }
+
+    void copyText(url).then((done) => {
+      if (!done) return
+      setSharedKey(pubkey)
+      window.clearTimeout(shareTimer.current)
+      shareTimer.current = window.setTimeout(() => setSharedKey(null), COPIED_RESET_MS)
     })
   }, [])
 
@@ -197,6 +218,7 @@ export const App = () => {
               pinned={catalog.pinned}
               favorites={favorites}
               copiedKey={copiedKey}
+              sharedKey={sharedKey}
               sortField={catalog.sortField}
               sortDirection={catalog.sortDirection}
               filtersActive={activeFilters > 0}
@@ -206,6 +228,7 @@ export const App = () => {
               onSort={catalog.toggleSort}
               onToggleFavorite={toggleFavorite}
               onCopy={copy}
+              onShare={share}
               onOpen={openProvider}
               onOpenFilters={openFilters}
             />

@@ -10,6 +10,8 @@ const pubkeyOf = (path: string): string | null => {
   return PUBKEY.test(candidate) ? candidate.toLowerCase() : null
 }
 
+export const providerUrl = (pubkey: string): string => `${window.location.origin}${base}${pubkey}`
+
 const readPubkey = (): string | null => pubkeyOf(window.location.pathname)
 
 export const useOpenProvider = (): [string | null, (pubkey: string | null) => void] => {

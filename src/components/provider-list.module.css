@@ -13,7 +13,8 @@
     var(--control-md)
     minmax(0, 1.35fr) minmax(0, 0.8fr) minmax(0, 1.25fr)
     minmax(0, 1fr) minmax(0, 0.95fr) minmax(0, 0.9fr)
-    minmax(0, 1fr) minmax(0, 1.2fr);
+    minmax(0, 1fr) minmax(0, 1.2fr)
+    var(--control-md);
   gap: 0 var(--space-3);
   align-items: center;
 }
@@ -252,6 +253,19 @@
 
 .orderFavorite {
   order: 1;
+}
+
+.orderShare {
+  order: 10;
+}
+
+.share {
+  color: var(--text-3);
+}
+
+.shareIcon {
+  width: var(--icon-control);
+  height: var(--icon-control);
 }
 
 .orderKey {

@@ -138,12 +138,12 @@ export const ProviderDetails = ({ detail, copiedKey, onCopy }: ProviderDetailsPr
   )
 }
 
-const SKELETON_SECTIONS: { id: SectionId; label: string; rows: number }[] = [
-  { id: "provider", label: "provider.providerTitle", rows: 11 },
-  { id: "software", label: "provider.software", rows: 2 },
-  { id: "benchmarks", label: "provider.benchmarks", rows: 2 },
-  { id: "hardware", label: "provider.hardware", rows: 5 },
-  { id: "network", label: "provider.network", rows: 5 },
+const SKELETON_SECTIONS: { id: SectionId; label: string; rows: number; copies: number }[] = [
+  { id: "provider", label: "provider.providerTitle", rows: 11, copies: 2 },
+  { id: "software", label: "provider.software", rows: 2, copies: 2 },
+  { id: "benchmarks", label: "provider.benchmarks", rows: 2, copies: 0 },
+  { id: "hardware", label: "provider.hardware", rows: 5, copies: 0 },
+  { id: "network", label: "provider.network", rows: 5, copies: 0 },
 ]
 
 const LABEL_WIDTHS = ["5.5em", "7em", "4.5em", "6.5em", "5em"]
@@ -157,15 +157,37 @@ export const ProviderDetailsSkeleton = () => {
   return (
     <div className={styles.details} aria-hidden="true">
       <div className={styles.statusCard}>
+        <div className={styles.bar}>
+          <span className={cx(styles.barSegment, styles.shape)} style={{ flexGrow: 1 }} />
+        </div>
+
         <div className={styles.statusBody}>
           <div className={styles.statusMain}>
             <div className={styles.statusLabel}>
               <span className={cx(styles.shape, styles.shapeDot)} />
-              <span className={cx(styles.statusText, styles.shape, styles.shapeLine)} style={line("6em")} />
+              <span className={cx(styles.statusText, styles.shape, styles.shapeLine)} style={line("6em")}>
+                &nbsp;
+              </span>
             </div>
             <p className={styles.description}>
-              <span className={cx(styles.shape, styles.shapeLine)} style={line("22em")} />
+              <span className={cx(styles.shape, styles.shapeLine)} style={line("22em")}>
+                &nbsp;
+              </span>
             </p>
+          </div>
+
+          <div className={styles.checks}>
+            <div className={styles.checksRow}>
+              <span className={cx(styles.checksLabel, styles.shape, styles.shapeLine)} style={line("6.5em")}>
+                &nbsp;
+              </span>
+              <span className={cx(styles.badgeTotal, styles.shape, styles.shapeLine)} style={line("4em")}>
+                &nbsp;
+              </span>
+            </div>
+            <span className={cx(styles.toggle, styles.shape, styles.shapeLine)} style={line("7em")}>
+              &nbsp;
+            </span>
           </div>
         </div>
       </div>
@@ -187,12 +209,17 @@ export const ProviderDetailsSkeleton = () => {
                     <span
                       className={cx(styles.rowLabel, styles.shape, styles.shapeLine)}
                       style={line(LABEL_WIDTHS[index % LABEL_WIDTHS.length] ?? "5em")}
-                    />
+                    >
+                      &nbsp;
+                    </span>
                     <span className={styles.spacer} />
                     <span
                       className={cx(styles.rowValue, styles.shape, styles.shapeLine)}
                       style={line(VALUE_WIDTHS[index % VALUE_WIDTHS.length] ?? "6em")}
-                    />
+                    >
+                      &nbsp;
+                    </span>
+                    {index < section.copies && <span className={cx(styles.copy, styles.shape, styles.shapeCopy)} />}
                   </div>
                 ))}
               </div>

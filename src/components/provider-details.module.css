@@ -239,7 +239,14 @@
 
 .shapeLine {
   width: var(--shape-w);
-  height: 1em;
+  color: transparent;
+}
+
+.shapeCopy {
+  align-self: center;
+  width: var(--control-xs);
+  height: var(--control-xs);
+  border-radius: var(--radius-pill);
 }
 
 .shapeDot {
