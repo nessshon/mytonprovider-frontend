@@ -7,16 +7,6 @@
   }
 }
 
-@keyframes shimmer {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
 .grid {
   display: grid;
   grid-template-columns:
@@ -301,12 +291,7 @@
 }
 
 .shape {
-  display: inline-block;
-  flex: none;
-  max-width: 100%;
-  border-radius: var(--radius-xs);
-  background: var(--surface-3);
-  animation: shimmer var(--dur-shimmer) ease-in-out infinite;
+  composes: shape from "./shared.module.css";
 }
 
 .shapeCircleSm {

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { ProviderDetail } from "@/types/model"
+import type { ProviderDetail, SectionId } from "@/types/model"
 import { CopyButton } from "./copy-button"
 import { SECTION_ICONS } from "./section-icons"
 import styles from "./provider-details.module.css"
@@ -129,6 +129,72 @@ export const ProviderDetails = ({ detail, copiedKey, onCopy }: ProviderDetailsPr
                   </div>
                   )
                 })}
+              </div>
+            </section>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const SKELETON_SECTIONS: { id: SectionId; label: string; rows: number }[] = [
+  { id: "provider", label: "provider.providerTitle", rows: 11 },
+  { id: "software", label: "provider.software", rows: 2 },
+  { id: "benchmarks", label: "provider.benchmarks", rows: 2 },
+  { id: "hardware", label: "provider.hardware", rows: 5 },
+  { id: "network", label: "provider.network", rows: 5 },
+]
+
+const LABEL_WIDTHS = ["5.5em", "7em", "4.5em", "6.5em", "5em"]
+const VALUE_WIDTHS = ["6em", "4em", "8em", "5em", "7em"]
+
+const line = (width: string) => ({ "--shape-w": width }) as React.CSSProperties
+
+export const ProviderDetailsSkeleton = () => {
+  const { t } = useTranslation()
+
+  return (
+    <div className={styles.details} aria-hidden="true">
+      <div className={styles.statusCard}>
+        <div className={styles.statusBody}>
+          <div className={styles.statusMain}>
+            <div className={styles.statusLabel}>
+              <span className={cx(styles.shape, styles.shapeDot)} />
+              <span className={cx(styles.statusText, styles.shape, styles.shapeLine)} style={line("6em")} />
+            </div>
+            <p className={styles.description}>
+              <span className={cx(styles.shape, styles.shapeLine)} style={line("22em")} />
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.groups}>
+        {SKELETON_SECTIONS.map((section) => {
+          const Icon = SECTION_ICONS[section.id]
+
+          return (
+            <section key={section.id} className={styles.section}>
+              <h2 className={styles.sectionTitle}>
+                <Icon className={styles.sectionIcon} aria-hidden="true" />
+                <span className={styles.sectionName}>{t(section.label)}</span>
+              </h2>
+
+              <div className={styles.rows}>
+                {Array.from({ length: section.rows }, (_, index) => (
+                  <div key={index} className={styles.row}>
+                    <span
+                      className={cx(styles.rowLabel, styles.shape, styles.shapeLine)}
+                      style={line(LABEL_WIDTHS[index % LABEL_WIDTHS.length] ?? "5em")}
+                    />
+                    <span className={styles.spacer} />
+                    <span
+                      className={cx(styles.rowValue, styles.shape, styles.shapeLine)}
+                      style={line(VALUE_WIDTHS[index % VALUE_WIDTHS.length] ?? "6em")}
+                    />
+                  </div>
+                ))}
               </div>
             </section>
           )

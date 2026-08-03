@@ -232,3 +232,18 @@
   border-radius: var(--radius-sm);
 }
 
+
+.shape {
+  composes: shape from "./shared.module.css";
+}
+
+.shapeLine {
+  width: var(--shape-w);
+  height: 1em;
+}
+
+.shapeDot {
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--radius-pill);
+}

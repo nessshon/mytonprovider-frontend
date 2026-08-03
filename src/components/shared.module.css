@@ -34,3 +34,22 @@
   color: var(--text-3);
   pointer-events: none;
 }
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.shape {
+  display: inline-block;
+  flex: none;
+  max-width: 100%;
+  border-radius: var(--radius-xs);
+  background: var(--surface-3);
+  animation: shimmer var(--dur-shimmer) ease-in-out infinite;
+}

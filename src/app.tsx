@@ -12,7 +12,7 @@ import Footer from "@/components/footer"
 import { Filters } from "@/components/filters"
 import { FilterButton } from "@/components/filter-button"
 import { IconButton } from "@/components/icon-button"
-import { ProviderDetails } from "@/components/provider-details"
+import { ProviderDetails, ProviderDetailsSkeleton } from "@/components/provider-details"
 import { ProviderList } from "@/components/provider-list"
 import { Sheet } from "@/components/sheet"
 import styles from "./app.module.css"
@@ -267,8 +267,10 @@ export const App = () => {
         </Sheet>
 
         <Sheet open={detailKey !== null} label={t("provider.providerTitle")} onClose={() => openProvider(null)}>
-          {detail && detailKey && (
+          {detail && detailKey ? (
             <ProviderDetails key={detailKey} detail={detail} copiedKey={copiedKey} onCopy={copy} />
+          ) : (
+            <ProviderDetailsSkeleton />
           )}
         </Sheet>
       </main>
