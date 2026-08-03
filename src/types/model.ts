@@ -5,6 +5,7 @@ export type SortField =
   | "uptime"
   | "price"
   | "rating"
+  | "status"
   | "freeSpace"
   | "workingTime"
   | "location"

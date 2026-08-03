@@ -20,7 +20,7 @@ interface Column {
 const COLUMNS: Column[] = [
   { id: "pubkey", label: "table.publicKey", sort: "pubkey" },
   { id: "rating", label: "table.rating", sort: "rating" },
-  { id: "status", label: "table.status", hint: "status.accessibleFilesHint" },
+  { id: "status", label: "table.status", hint: "status.accessibleFilesHint", sort: "status" },
   { id: "uptime", label: "table.uptime", hint: "status.uptimeHint", sort: "uptime" },
   { id: "price", label: "table.price", hint: "status.priceHint", sort: "price" },
   { id: "freeSpace", label: "table.freeSpace", hint: "status.freeSpaceHint", sort: "freeSpace" },

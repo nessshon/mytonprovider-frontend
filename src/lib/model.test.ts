@@ -44,6 +44,34 @@ describe("toRow", () => {
   })
 })
 
+describe("sortProviders by status", () => {
+  const labels = (direction: "asc" | "desc") =>
+    sortProviders(providers, "status", direction).map((provider) => toRow(provider, t).status.label)
+
+  it("puts healthy providers before broken ones", () => {
+    expect(labels("desc")).toEqual([
+      "status.stable",
+      "status.stable",
+      "status.stable",
+      "status.partial",
+      "status.notStored",
+      "status.unavailable",
+    ])
+  })
+
+  it("reverses on the other direction", () => {
+    expect(labels("asc")).toEqual([...labels("desc")].reverse())
+  })
+
+  it("orders equally healthy providers by how many checks they pass", () => {
+    const ratios = sortProviders(providers, "status", "desc")
+      .filter((provider) => provider.status === 0)
+      .map((provider) => provider.status_ratio)
+
+    expect(ratios).toEqual([...ratios].sort((a, b) => b - a))
+  })
+})
+
 describe("toDetail", () => {
   it("survives a provider the catalog sent without an address", () => {
     const detail = toDetail({ ...stable, address: null }, NOW, t)

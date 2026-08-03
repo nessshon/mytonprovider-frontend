@@ -32,6 +32,17 @@ const NOT_STORED = [301, 302]
 const NO_PROOFS = [401, 402, 403]
 const KNOWN_REASONS = [0, ...UNAVAILABLE, ...NOT_STORED, ...NO_PROOFS]
 
+const STATUS_ORDER: Record<string, number> = {
+  noData: 0,
+  unknown: 1,
+  unavailable: 2,
+  notStored: 3,
+  noProofs: 4,
+  unstable: 5,
+  partial: 6,
+  stable: 7,
+}
+
 const classify = (status: number | null, ratio: number): { tone: StatusTone; key: string } => {
   if (status === null) return { tone: "gray", key: "noData" }
 
@@ -194,6 +205,10 @@ const sortValue = (provider: Provider, field: SortField): string | number => {
       return provider.price
     case "rating":
       return provider.rating
+    case "status": {
+      const { key } = classify(provider.status, provider.status_ratio)
+      return (STATUS_ORDER[key] ?? 0) + (provider.status === 0 ? provider.status_ratio : 0)
+    }
     case "freeSpace":
       return freeSpaceOf(provider) ?? -1
   }
