@@ -1,4 +1,3 @@
-import type { FiltersData } from "@/types/filters"
 import type { Provider } from "@/types/provider"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://mytonprovider.org/api/v1"
@@ -46,7 +45,7 @@ const isProvider = (item: unknown): item is Provider =>
   typeof item === "object" && item !== null && typeof (item as { pubkey?: unknown }).pubkey === "string"
 
 
-export const fetchProviders = async (filters: FiltersData, signal: AbortSignal): Promise<Provider[]> => {
+export const fetchProviders = async (signal: AbortSignal): Promise<Provider[]> => {
   const providers: Provider[] = []
   let offset = 0
 
@@ -54,7 +53,7 @@ export const fetchProviders = async (filters: FiltersData, signal: AbortSignal):
     const data = await request("/providers/search", {
       method: "POST",
       signal,
-      body: JSON.stringify({ filters, exact: [], limit: PAGE_LIMIT, offset }),
+      body: JSON.stringify({ filters: {}, exact: [], limit: PAGE_LIMIT, offset }),
     })
 
     const page = pageOf(data)

@@ -1,23 +1,23 @@
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import type { FiltersData, FiltersRange } from "@/types/filters"
+import type { FiltersData } from "@/types/filters"
 import type { SectionId } from "@/types/model"
-import { toGroupViews, type FieldView, type OptionSource } from "@/lib/filters"
+import { toGroupViews, type FieldView, type FilterBounds, type FilterOptions } from "@/lib/filters"
 import { FlagField, RangeField, SelectField, TextField, TriField } from "./fields"
 import { SECTION_ICONS } from "./section-icons"
 import styles from "./filters.module.css"
 
 interface FiltersProps {
   value: FiltersData
-  range: FiltersRange | null
-  options: Record<OptionSource, string[]>
+  bounds: FilterBounds
+  options: FilterOptions
   onChange: (filters: FiltersData) => void
 }
 
-export const Filters = ({ value, range, options, onChange }: FiltersProps) => {
+export const Filters = ({ value, bounds, options, onChange }: FiltersProps) => {
   const { t } = useTranslation()
-  const groups = toGroupViews(value, range, options)
+  const groups = toGroupViews(value, bounds, options)
   const [openGroup, setOpenGroup] = useState<SectionId | null>(groups[0].id)
 
   const renderField = (field: FieldView) => {

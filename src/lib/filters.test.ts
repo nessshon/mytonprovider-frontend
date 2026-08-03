@@ -1,25 +1,21 @@
 import { describe, expect, it } from "vitest"
-import type { FiltersRange } from "@/types/filters"
 import {
   NO_FILTERS,
   countActiveFilters,
+  deriveBounds,
   isPristine,
+  matches,
+  optionsFor,
   toGroupViews,
   type FieldView,
-  type OptionSource,
 } from "./filters"
-import { deriveFiltersRange } from "./model"
-import { providers } from "./fixtures"
+import { brokenPing, overfilled, providers, silent, stable, veteran } from "./fixtures"
 
 const NOW = 1785545100
-const range: FiltersRange = deriveFiltersRange(providers, NOW)
-const options: Record<OptionSource, string[]> = {
-  locations: range.locations,
-  storageHashes: ["ba05e00"],
-  providerHashes: ["8c7ca5b"],
-}
+const bounds = deriveBounds(providers, NOW)
+const options = optionsFor(providers)
 
-const view = (filters = NO_FILTERS) => toGroupViews(filters, range, options)
+const view = (filters = NO_FILTERS) => toGroupViews(filters, bounds, options)
 
 const field = (label: string, filters = NO_FILTERS): FieldView => {
   const found = view(filters)
@@ -151,5 +147,55 @@ describe("isPristine", () => {
 
     expect(back).toEqual({})
     expect(isPristine(back)).toBe(true)
+  })
+})
+
+describe("matches", () => {
+  const kept = (filters: Parameters<typeof matches>[1]) =>
+    providers.filter((provider) => matches(provider, filters, NOW)).length
+
+  it("keeps everyone while nothing is asked", () => {
+    expect(kept(NO_FILTERS)).toBe(providers.length)
+  })
+
+  it("keeps a value sitting exactly on the bound", () => {
+    expect(matches(stable, { rating_gt: stable.rating }, NOW)).toBe(true)
+    expect(matches(stable, { rating_lt: stable.rating }, NOW)).toBe(true)
+  })
+
+  it("drops a provider that cannot answer the question", () => {
+    expect(matches(silent, { total_ram_gt: 1 }, NOW)).toBe(false)
+    expect(matches(silent, NO_FILTERS, NOW)).toBe(true)
+  })
+
+  it("compares a scaled range in the units it stores", () => {
+    expect(matches(veteran, { max_span_gt: veteran.max_span }, NOW)).toBe(true)
+    expect(matches(veteran, { max_span_gt: veteran.max_span + 1 }, NOW)).toBe(false)
+  })
+
+  it("matches a select on the whole value", () => {
+    expect(kept({ location: "Japan (JP)" })).toBe(2)
+    expect(kept({ location: "Japan" })).toBe(0)
+  })
+
+  it("matches text anywhere, ignoring case", () => {
+    expect(matches(stable, { isp: "jsc" }, NOW)).toBe(true)
+    expect(matches(stable, { isp: "IOT" }, NOW)).toBe(true)
+    expect(matches(stable, { isp: "nope" }, NOW)).toBe(false)
+  })
+
+  it("treats free space the way the catalog shows it", () => {
+    expect(matches(stable, { has_free_space: true }, NOW)).toBe(true)
+    expect(matches(overfilled, { has_free_space: true }, NOW)).toBe(false)
+  })
+
+  it("ignores a ping the node could not measure, exactly like the card does", () => {
+    expect(matches(brokenPing, { speedtest_ping_gt: 0 }, NOW)).toBe(false)
+    expect(matches(stable, { speedtest_ping_gt: 0 }, NOW)).toBe(true)
+  })
+
+  it("answers a switch by the value it stores", () => {
+    expect(kept({ is_send_telemetry: true })).toBe(providers.length - 1)
+    expect(kept({ is_send_telemetry: false })).toBe(1)
   })
 })

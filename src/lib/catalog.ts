@@ -1,67 +1,38 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { FiltersData, FiltersRange } from "@/types/filters"
+import type { FiltersData } from "@/types/filters"
 import type { Provider } from "@/types/provider"
 import type { ProviderDetail, SortDirection, SortField } from "@/types/model"
 import { ApiError, fetchProviders } from "./api"
-import { collectHashes, deriveFiltersRange, matchesQuery, sortProviders, toDetail, toRow } from "./model"
-import { isPristine, type OptionSource } from "./filters"
+import { matchesQuery, sortProviders, toDetail, toRow } from "./model"
+import { deriveBounds, matches, optionsFor, type FilterBounds, type FilterOptions } from "./filters"
 
 export const PAGE_SIZE = 10
-const COUNT_DELAY_MS = 250
 const FRESH_FOR_MS = 120_000
-const REMEMBERED_ANSWERS = 16
-
-const answers = new Map<string, { providers: Provider[]; at: number }>()
-
-const answerKey = (filters: FiltersData): string =>
-  JSON.stringify(Object.entries(filters).sort(([left], [right]) => left.localeCompare(right)))
-
-const rememberedAnswer = (filters: FiltersData): Provider[] | null => {
-  const remembered = answers.get(answerKey(filters))
-  return remembered && Date.now() - remembered.at < FRESH_FOR_MS ? remembered.providers : null
-}
-
-const loadProviders = async (filters: FiltersData, signal: AbortSignal): Promise<Provider[]> => {
-  const key = answerKey(filters)
-  const remembered = rememberedAnswer(filters)
-  if (remembered) return remembered
-
-  const providers = await fetchProviders(filters, signal)
-  answers.delete(key)
-  answers.set(key, { providers, at: Date.now() })
-  for (const stale of answers.keys()) {
-    if (answers.size <= REMEMBERED_ANSWERS) break
-    answers.delete(stale)
-  }
-  return providers
-}
 
 interface Snapshot {
   providers: Provider[]
-  range: FiltersRange | null
-  hashes: { storage: string[]; provider: string[] }
+  bounds: FilterBounds
+  options: FilterOptions
   fetchedAt: number
 }
 
 export const NOTHING_LOADED: Snapshot = {
   providers: [],
-  range: null,
-  hashes: { storage: [], provider: [] },
+  bounds: {},
+  options: {},
   fetchedAt: 0,
 }
 
-export const nextSnapshot = (
-  current: Snapshot,
-  providers: Provider[],
-  filters: FiltersData,
-  now: number,
-): Snapshot => ({
+export const nextSnapshot = (providers: Provider[], now: number): Snapshot => ({
   providers,
-  range: isPristine(filters) ? deriveFiltersRange(providers, now) : current.range,
-  hashes: collectHashes(providers, current.hashes),
+  bounds: deriveBounds(providers, now),
+  options: optionsFor(providers),
   fetchedAt: now,
 })
+
+export const countMatching = (providers: Provider[], filters: FiltersData, query: string, now: number): number =>
+  providers.filter((provider) => matches(provider, filters, now) && matchesQuery(provider, query)).length
 
 export const useCatalog = (filters: FiltersData, favorites: string[]) => {
   const { t } = useTranslation()
@@ -83,12 +54,11 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
     setLoading(true)
     setFailure(null)
 
-    loadProviders(filters, controller.signal)
+    fetchProviders(controller.signal)
       .then((loaded) => {
         if (controller.signal.aborted) return
-        const now = Math.floor(Date.now() / 1000)
         loadedAt.current = Date.now()
-        setSnapshot((current) => nextSnapshot(current, loaded, filters, now))
+        setSnapshot(nextSnapshot(loaded, Math.floor(Date.now() / 1000)))
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
@@ -99,7 +69,7 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
       })
 
     return () => controller.abort()
-  }, [filters, reloadToken])
+  }, [reloadToken])
 
   useEffect(() => {
     const onVisible = () => {
@@ -117,9 +87,11 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
   }, [filters])
 
   const sorted = useMemo(() => {
-    const matched = snapshot.providers.filter((provider) => matchesQuery(provider, query))
-    return sortProviders(matched, sortField, sortDirection)
-  }, [snapshot.providers, query, sortField, sortDirection])
+    const found = snapshot.providers.filter(
+      (provider) => matches(provider, filters, snapshot.fetchedAt) && matchesQuery(provider, query),
+    )
+    return sortProviders(found, sortField, sortDirection)
+  }, [snapshot.providers, snapshot.fetchedAt, filters, query, sortField, sortDirection])
 
   const rows = useMemo(() => sorted.slice(0, limit).map((provider) => toRow(provider, t)), [sorted, limit, t])
 
@@ -128,21 +100,17 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
     [sorted, favorites, t],
   )
 
-  const options = useMemo<Record<OptionSource, string[]>>(
-    () => ({
-      locations: snapshot.range?.locations ?? [],
-      storageHashes: snapshot.hashes.storage,
-      providerHashes: snapshot.hashes.provider,
-    }),
-    [snapshot.range, snapshot.hashes],
-  )
-
   const detailFor = useCallback(
     (pubkey: string): ProviderDetail | null => {
       const provider = snapshot.providers.find((item) => item.pubkey === pubkey)
       return provider ? toDetail(provider, snapshot.fetchedAt, t) : null
     },
     [snapshot.providers, snapshot.fetchedAt, t],
+  )
+
+  const countFor = useCallback(
+    (draft: FiltersData) => countMatching(snapshot.providers, draft, query, snapshot.fetchedAt),
+    [snapshot.providers, snapshot.fetchedAt, query],
   )
 
   const setQuery = useCallback((next: string) => {
@@ -166,8 +134,8 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
     loading,
     showSkeleton: loading && snapshot.providers.length === 0,
     failure,
-    range: snapshot.range,
-    options,
+    bounds: snapshot.bounds,
+    options: snapshot.options,
     query,
     setQuery,
     sortField,
@@ -176,57 +144,6 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
     loadMore: () => setLimit((current) => current + PAGE_SIZE),
     retry: () => setReloadToken((current) => current + 1),
     detailFor,
+    countFor,
   }
-}
-
-interface MatchCountInput {
-  draft: FiltersData
-  applied: FiltersData
-  appliedTotal: number | null
-  query: string
-  active: boolean
-}
-
-export const useMatchCount = ({ draft, applied, appliedTotal, query, active }: MatchCountInput) => {
-  const [total, setTotal] = useState<number | null>(appliedTotal)
-  const [counting, setCounting] = useState(false)
-
-  useEffect(() => {
-    if (!active || draft === applied) {
-      setTotal(appliedTotal)
-      setCounting(false)
-      return
-    }
-
-    const known = rememberedAnswer(draft)
-    if (known) {
-      setTotal(known.filter((provider) => matchesQuery(provider, query)).length)
-      setCounting(false)
-      return
-    }
-
-    const controller = new AbortController()
-
-    const timer = window.setTimeout(() => {
-      setCounting(true)
-      loadProviders(draft, controller.signal)
-        .then((found) => {
-          if (controller.signal.aborted) return
-          setTotal(found.filter((provider) => matchesQuery(provider, query)).length)
-        })
-        .catch(() => {
-          if (!controller.signal.aborted) setTotal(null)
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setCounting(false)
-        })
-    }, COUNT_DELAY_MS)
-
-    return () => {
-      window.clearTimeout(timer)
-      controller.abort()
-    }
-  }, [draft, applied, appliedTotal, query, active])
-
-  return { total, counting }
 }

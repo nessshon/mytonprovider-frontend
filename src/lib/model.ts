@@ -1,4 +1,3 @@
-import type { FiltersRange } from "@/types/filters"
 import type { Provider, StatusReasonStat, Telemetry } from "@/types/provider"
 import type {
   BreakdownItem,
@@ -16,7 +15,6 @@ import {
   formatDuration,
   formatNumber,
   formatPercent,
-  SECONDS_IN_DAY,
   shortenMiddle,
   type Translate,
 } from "./format"
@@ -107,101 +105,8 @@ export const toRow = (provider: Provider, t: Translate): ProviderRow => {
   }
 }
 
-const SPEED_UNITS: Record<string, number> = {
-  B: 1,
-  KB: 1e3,
-  KIB: 1024,
-  MB: 1e6,
-  MIB: 1024 ** 2,
-  GB: 1e9,
-  GIB: 1024 ** 3,
-}
 
-const parseSpeed = (value: string | null | undefined): number | null => {
-  const match = value === null || value === undefined ? null : /^([\d.]+)\s*(B|[KMG]iB|[KMG]B)\/s$/i.exec(value)
-  if (match === null) return null
-  const amount = Number(match[1])
-  const factor = SPEED_UNITS[match[2].toUpperCase()]
-  return factor !== undefined && Number.isFinite(amount) ? amount * factor : null
-}
 
-const pickNumbers = (providers: Provider[], pick: (provider: Provider) => number | null | undefined): number[] =>
-  providers.map(pick).filter((value): value is number => typeof value === "number" && Number.isFinite(value))
-
-const lowest = (values: number[], fallback: number): number =>
-  values.length === 0 ? fallback : values.reduce((min, value) => (value < min ? value : min))
-
-const highest = (values: number[], fallback: number): number =>
-  values.length === 0 ? fallback : values.reduce((max, value) => (value > max ? value : max))
-
-export const deriveFiltersRange = (providers: Provider[], now: number): FiltersRange => {
-  const of = (pick: (provider: Provider) => number | null | undefined) => pickNumbers(providers, pick)
-  const minSpan = of((p) => p.min_span)
-  const maxSpan = of((p) => p.max_span)
-  const bagSize = of((p) => p.max_bag_size_bytes / 1024 ** 2)
-  const totalSpace = of((p) => p.telemetry?.total_provider_space)
-  const totalRam = of((p) => p.telemetry?.total_ram)
-  const diskRead = of((p) => parseSpeed(p.telemetry?.qd64_disk_read_speed))
-  const diskWrite = of((p) => parseSpeed(p.telemetry?.qd64_disk_write_speed))
-  const download = of((p) => p.telemetry?.speedtest_download)
-  const upload = of((p) => p.telemetry?.speedtest_upload)
-  const ping = of((p) => p.telemetry?.speedtest_ping)
-
-  return {
-    locations: [
-      ...new Set(
-        providers
-          .map((provider) => provider.location)
-          .filter((location) => location?.country && location.country_iso)
-          .map((location) => `${location?.country} (${location?.country_iso})`),
-      ),
-    ].sort(),
-    rating_max: highest(of((p) => p.rating), 50),
-    reg_time_days_max: highest(of((p) => (now - p.reg_time) / SECONDS_IN_DAY), 1095),
-    price_max: highest(of((p) => p.price), 100e9),
-    min_span_min: lowest(minSpan, 0),
-    min_span_max: highest(minSpan, 2592000),
-    max_span_min: lowest(maxSpan, 0),
-    max_span_max: highest(maxSpan, 2592000),
-    max_bag_size_mb_min: lowest(bagSize, 0),
-    max_bag_size_mb_max: highest(bagSize, 40000),
-    total_provider_space_min: lowest(totalSpace, 0),
-    total_provider_space_max: highest(totalSpace, 40000),
-    used_provider_space_max: highest(of((p) => p.telemetry?.used_provider_space), 40000),
-    cpu_number_max: highest(of((p) => p.telemetry?.cpu_number), 128),
-    total_ram_min: lowest(totalRam, 0),
-    total_ram_max: highest(totalRam, 512),
-    benchmark_disk_read_speed_min: lowest(diskRead, 0),
-    benchmark_disk_read_speed_max: highest(diskRead, 1e9),
-    benchmark_disk_write_speed_min: lowest(diskWrite, 0),
-    benchmark_disk_write_speed_max: highest(diskWrite, 1e9),
-    speedtest_download_min: lowest(download, 0),
-    speedtest_download_max: highest(download, 1e9),
-    speedtest_upload_min: lowest(upload, 0),
-    speedtest_upload_max: highest(upload, 1e9),
-    speedtest_ping_min: lowest(ping, 0),
-    speedtest_ping_max: highest(ping, 300),
-  }
-}
-
-export const collectHashes = (
-  providers: Provider[],
-  current: { storage: string[]; provider: string[] },
-): { storage: string[]; provider: string[] } => {
-  const storage = new Set(current.storage)
-  const provider = new Set(current.provider)
-
-  for (const item of providers) {
-    if (item.telemetry?.storage_git_hash) storage.add(item.telemetry.storage_git_hash)
-    if (item.telemetry?.provider_git_hash) provider.add(item.telemetry.provider_git_hash)
-  }
-
-  if (storage.size === current.storage.length && provider.size === current.provider.length) {
-    return current
-  }
-
-  return { storage: [...storage].sort(), provider: [...provider].sort() }
-}
 
 const sortValue = (provider: Provider, field: SortField): string | number => {
   switch (field) {

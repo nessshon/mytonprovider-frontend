@@ -190,10 +190,6 @@
   background: var(--btn-hover);
 }
 
-.apply[data-counting="true"] {
-  opacity: 0.65;
-}
-
 .fab {
   position: fixed;
   right: var(--space-8);

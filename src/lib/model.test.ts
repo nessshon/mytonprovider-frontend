@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { collectHashes, deriveFiltersRange, matchesQuery, sortProviders, toDetail, toRow } from "./model"
+import { matchesQuery, sortProviders, toDetail, toRow } from "./model"
 import { brokenPing, mostlyFailing, overfilled, providers, silent, stable, translate as t, veteran } from "./fixtures"
 
 const NOW = 1785545100
@@ -134,29 +134,6 @@ describe("toDetail", () => {
   })
 })
 
-describe("deriveFiltersRange", () => {
-  const range = deriveFiltersRange(providers, NOW)
-
-  it("lists every known location once, sorted", () => {
-    expect(range.locations).toEqual(["Japan (JP)", "Russia (RU)"])
-  })
-
-  it("takes bounds from the providers it was given", () => {
-    expect(range.rating_max).toBeCloseTo(20.415426)
-    expect(range.price_max).toBe(10002432000)
-    expect(range.total_ram_max).toBe(33.7)
-    expect(range.speedtest_ping_max).toBe(1800000)
-  })
-
-  it("reads disk speed out of the formatted string", () => {
-    expect(range.benchmark_disk_read_speed_max).toBeCloseTo(63.9 * 1024 ** 2)
-  })
-
-  it("falls back when there is nothing to measure", () => {
-    expect(deriveFiltersRange([], NOW).rating_max).toBe(50)
-  })
-})
-
 describe("sortProviders", () => {
   it("orders by rating in both directions", () => {
     expect(sortProviders(providers, "rating", "desc")[0]).toBe(stable)
@@ -191,22 +168,3 @@ describe("matchesQuery", () => {
   })
 })
 
-describe("collectHashes", () => {
-  const empty = { storage: [] as string[], provider: [] as string[] }
-
-  it("gathers every hash it has seen", () => {
-    expect(collectHashes(providers, empty)).toEqual({ storage: ["ba05e00"], provider: ["8c7ca5b"] })
-  })
-
-  it("keeps the previous value when nothing is new", () => {
-    const first = collectHashes(providers, empty)
-
-    expect(collectHashes(providers, first)).toBe(first)
-  })
-
-  it("keeps hashes that dropped out of the current answer", () => {
-    const seeded = { storage: ["deadbee"], provider: [] as string[] }
-
-    expect(collectHashes(providers, seeded).storage).toEqual(["ba05e00", "deadbee"])
-  })
-})

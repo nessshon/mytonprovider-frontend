@@ -9,6 +9,7 @@ export interface Telemetry {
   cpu_is_virtual?: boolean | null
   total_ram?: number | null
   usage_ram?: number | null
+  ram_usage_percent?: number | null
   qd64_disk_read_speed?: string | null
   qd64_disk_write_speed?: string | null
   speedtest_download?: number | null

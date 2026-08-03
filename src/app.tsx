@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { ArrowUp, Search, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { FiltersData } from "@/types/filters"
-import { PAGE_SIZE, useCatalog, useMatchCount } from "@/lib/catalog"
+import { PAGE_SIZE, useCatalog } from "@/lib/catalog"
 import { NO_FILTERS, countActiveFilters } from "@/lib/filters"
 import { FAVORITES_KEY, readStoredStrings, writeStored } from "@/lib/storage"
 import { copyText, scrollToTop } from "@/lib/dom"
@@ -124,13 +124,7 @@ export const App = () => {
     )
   }, [])
 
-  const match = useMatchCount({
-    draft,
-    applied: filters,
-    appliedTotal: catalog.showSkeleton ? null : catalog.total,
-    query: catalog.query,
-    active: filtersOpen,
-  })
+  const matching = filtersOpen ? catalog.countFor(draft) : catalog.total
 
   const activeFilters = useMemo(() => countActiveFilters(filters), [filters])
   const draftFilters = useMemo(() => countActiveFilters(draft), [draft])
@@ -278,20 +272,17 @@ export const App = () => {
             <button
               type="button"
               className={styles.apply}
-              data-counting={match.counting}
               onClick={() => {
                 setFilters(draft)
                 closeFilters()
               }}
             >
-              {match.total === null
-                ? t("buttons.applyFilters")
-                : t("buttons.showMatching", { total: match.total })}
+              {catalog.showSkeleton ? t("buttons.applyFilters") : t("buttons.showMatching", { total: matching })}
             </button>
           }
         >
           {filtersOpen && (
-            <Filters value={draft} range={catalog.range} options={catalog.options} onChange={setDraft} />
+            <Filters value={draft} bounds={catalog.bounds} options={catalog.options} onChange={setDraft} />
           )}
         </Sheet>
 

@@ -57,3 +57,21 @@ export const parseDecimal = (value: string): number | null => {
   const parsed = Number(normalized)
   return Number.isFinite(parsed) ? parsed : null
 }
+
+const SPEED_UNITS: Record<string, number> = {
+  B: 1,
+  KB: 1e3,
+  KIB: 1024,
+  MB: 1e6,
+  MIB: 1024 ** 2,
+  GB: 1e9,
+  GIB: 1024 ** 3,
+}
+
+export const parseSpeed = (value: string | null | undefined): number | null => {
+  const match = value === null || value === undefined ? null : /^([\d.]+)\s*(B|[KMG]iB|[KMG]B)\/s$/i.exec(value)
+  if (match === null) return null
+  const amount = Number(match[1])
+  const factor = SPEED_UNITS[match[2].toUpperCase()]
+  return factor !== undefined && Number.isFinite(amount) ? amount * factor : null
+}

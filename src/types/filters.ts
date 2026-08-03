@@ -1,31 +1,3 @@
-export interface FiltersRange {
-  locations: string[]
-  rating_max: number
-  reg_time_days_max: number
-  price_max: number
-  min_span_min: number
-  min_span_max: number
-  max_span_min: number
-  max_span_max: number
-  max_bag_size_mb_min: number
-  max_bag_size_mb_max: number
-  total_provider_space_min: number
-  total_provider_space_max: number
-  used_provider_space_max: number
-  cpu_number_max: number
-  total_ram_min: number
-  total_ram_max: number
-  benchmark_disk_read_speed_min: number
-  benchmark_disk_read_speed_max: number
-  benchmark_disk_write_speed_min: number
-  benchmark_disk_write_speed_max: number
-  speedtest_download_min: number
-  speedtest_download_max: number
-  speedtest_upload_min: number
-  speedtest_upload_max: number
-  speedtest_ping_min: number
-  speedtest_ping_max: number
-}
 
 export interface FiltersData {
   location?: string
