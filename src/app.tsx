@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { ArrowUp, Search, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { FiltersData } from "@/types/filters"
-import { PAGE_SIZE, useCatalog } from "@/lib/catalog"
+import { PAGE_SIZE, useCatalog, useMatchCount } from "@/lib/catalog"
 import { NO_FILTERS, countActiveFilters } from "@/lib/filters"
 import { FAVORITES_KEY, readStoredStrings, writeStored } from "@/lib/storage"
 import { copyText, scrollToTop } from "@/lib/dom"
@@ -87,6 +87,13 @@ export const App = () => {
       current.includes(pubkey) ? current.filter((key) => key !== pubkey) : [...current, pubkey],
     )
   }, [])
+
+  const match = useMatchCount({
+    draft,
+    applied: filters,
+    appliedTotal: catalog.total,
+    query: catalog.query,
+  })
 
   const activeFilters = useMemo(() => countActiveFilters(filters, catalog.range), [filters, catalog.range])
   const draftFilters = useMemo(() => countActiveFilters(draft, catalog.range), [draft, catalog.range])
@@ -238,12 +245,15 @@ export const App = () => {
             <button
               type="button"
               className={styles.apply}
+              data-counting={match.counting}
               onClick={() => {
                 setFilters(draft)
                 closeOverlay()
               }}
             >
-              {t("buttons.applyFilters")}
+              {match.total === null
+                ? t("buttons.applyFilters")
+                : t("buttons.showMatching", { total: match.total })}
             </button>
           }
         >

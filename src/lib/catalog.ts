@@ -8,6 +8,7 @@ import { collectHashes, deriveFiltersRange, matchesQuery, sortProviders, toDetai
 import { isPristine, type OptionSource } from "./filters"
 
 export const PAGE_SIZE = 10
+const COUNT_DELAY_MS = 400
 
 interface Snapshot {
   providers: Provider[]
@@ -133,4 +134,48 @@ export const useCatalog = (filters: FiltersData, favorites: string[]) => {
     retry: () => setReloadToken((current) => current + 1),
     detailFor,
   }
+}
+
+interface MatchCountInput {
+  draft: FiltersData
+  applied: FiltersData
+  appliedTotal: number
+  query: string
+}
+
+export const useMatchCount = ({ draft, applied, appliedTotal, query }: MatchCountInput) => {
+  const [total, setTotal] = useState<number | null>(appliedTotal)
+  const [counting, setCounting] = useState(false)
+
+  useEffect(() => {
+    if (draft === applied) {
+      setTotal(appliedTotal)
+      setCounting(false)
+      return
+    }
+
+    const controller = new AbortController()
+    setCounting(true)
+
+    const timer = window.setTimeout(() => {
+      fetchProviders(draft, controller.signal)
+        .then((found) => {
+          if (controller.signal.aborted) return
+          setTotal(found.filter((provider) => matchesQuery(provider, query)).length)
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setTotal(null)
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setCounting(false)
+        })
+    }, COUNT_DELAY_MS)
+
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
+  }, [draft, applied, appliedTotal, query])
+
+  return { total, counting }
 }

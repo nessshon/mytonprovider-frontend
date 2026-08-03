@@ -20,6 +20,7 @@
   "buttons": {
     "loadMore": "Показать ещё",
     "applyFilters": "Применить",
+    "showMatching": "Показать {{total}}",
     "reset": "Сбросить",
     "goUp": "Наверх",
     "retry": "Повторить"

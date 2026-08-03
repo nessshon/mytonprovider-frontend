@@ -20,6 +20,7 @@
   "buttons": {
     "loadMore": "Load more",
     "applyFilters": "Apply filters",
+    "showMatching": "Show {{total}}",
     "reset": "Reset",
     "goUp": "Back to top",
     "retry": "Retry"
