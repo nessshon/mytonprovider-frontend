@@ -6,6 +6,7 @@ import { PAGE_SIZE, useCatalog, useMatchCount } from "@/lib/catalog"
 import { NO_FILTERS, countActiveFilters } from "@/lib/filters"
 import { FAVORITES_KEY, readStoredStrings, writeStored } from "@/lib/storage"
 import { copyText, scrollToTop } from "@/lib/dom"
+import { useOpenProvider } from "@/lib/route"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Filters } from "@/components/filters"
@@ -18,8 +19,6 @@ import styles from "./app.module.css"
 
 const COPIED_RESET_MS = 1200
 
-type Overlay = { kind: "filters" } | { kind: "detail"; pubkey: string } | null
-
 export const App = () => {
   const { t } = useTranslation()
 
@@ -27,7 +26,8 @@ export const App = () => {
   const [draft, setDraft] = useState<FiltersData>(NO_FILTERS)
   const [favorites, setFavorites] = useState<string[]>(() => readStoredStrings(FAVORITES_KEY))
 
-  const [overlay, setOverlay] = useState<Overlay>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [detailKey, openProvider] = useOpenProvider()
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [scrolledDown, setScrolledDown] = useState(false)
   const [footerVisible, setFooterVisible] = useState(false)
@@ -54,8 +54,10 @@ export const App = () => {
     return () => observer.disconnect()
   }, [])
 
+  const anySheetOpen = filtersOpen || detailKey !== null
+
   useLayoutEffect(() => {
-    if (!overlay) return
+    if (!anySheetOpen) return
     const root = document.documentElement
     const width = root.clientWidth
     root.style.overflow = "hidden"
@@ -65,7 +67,7 @@ export const App = () => {
       root.style.overflow = ""
       root.style.paddingRight = ""
     }
-  }, [overlay])
+  }, [anySheetOpen])
 
   useEffect(() => {
     writeStored(FAVORITES_KEY, JSON.stringify(favorites))
@@ -93,17 +95,20 @@ export const App = () => {
     applied: filters,
     appliedTotal: catalog.total,
     query: catalog.query,
-    active: overlay?.kind === "filters",
+    active: filtersOpen,
   })
 
   const activeFilters = useMemo(() => countActiveFilters(filters, catalog.range), [filters, catalog.range])
   const draftFilters = useMemo(() => countActiveFilters(draft, catalog.range), [draft, catalog.range])
 
   const { detailFor } = catalog
-  const detailKey = overlay?.kind === "detail" ? overlay.pubkey : null
   const detail = useMemo(() => (detailKey ? detailFor(detailKey) : null), [detailFor, detailKey])
 
-  const closeOverlay = useCallback(() => setOverlay(null), [])
+  const closeFilters = useCallback(() => setFiltersOpen(false), [])
+
+  useEffect(() => {
+    if (detailKey !== null && !catalog.loading && !detail) openProvider(null)
+  }, [detailKey, detail, catalog.loading, openProvider])
 
   const resetFilters = () => {
     setFilters(NO_FILTERS)
@@ -112,7 +117,7 @@ export const App = () => {
 
   const openFilters = () => {
     setDraft(filters)
-    setOverlay({ kind: "filters" })
+    setFiltersOpen(true)
   }
 
   return (
@@ -201,7 +206,7 @@ export const App = () => {
               onSort={catalog.toggleSort}
               onToggleFavorite={toggleFavorite}
               onCopy={copy}
-              onOpen={(pubkey) => setOverlay({ kind: "detail", pubkey })}
+              onOpen={openProvider}
               onOpenFilters={openFilters}
             />
 
@@ -236,12 +241,12 @@ export const App = () => {
         )}
 
         <Sheet
-          open={overlay?.kind === "filters"}
+          open={filtersOpen}
           label={t("filters.title")}
           title={t("filters.title")}
           badge={draftFilters}
           onReset={draftFilters > 0 ? resetFilters : undefined}
-          onClose={closeOverlay}
+          onClose={closeFilters}
           footer={
             <button
               type="button"
@@ -249,7 +254,7 @@ export const App = () => {
               data-counting={match.counting}
               onClick={() => {
                 setFilters(draft)
-                closeOverlay()
+                closeFilters()
               }}
             >
               {match.total === null
@@ -261,7 +266,7 @@ export const App = () => {
           <Filters value={draft} range={catalog.range} options={catalog.options} onChange={setDraft} />
         </Sheet>
 
-        <Sheet open={overlay?.kind === "detail"} label={t("provider.providerTitle")} onClose={closeOverlay}>
+        <Sheet open={detailKey !== null} label={t("provider.providerTitle")} onClose={() => openProvider(null)}>
           {detail && detailKey && (
             <ProviderDetails key={detailKey} detail={detail} copiedKey={copiedKey} onCopy={copy} />
           )}
