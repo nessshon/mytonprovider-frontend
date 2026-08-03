@@ -204,12 +204,14 @@
 }
 
 .rowLabel {
-  flex: none;
+  min-width: 0;
   font-weight: 500;
   color: var(--text-2);
 }
 
 .rowValue {
+  flex: none;
+  max-width: 100%;
   font-weight: 500;
   color: var(--text);
   text-align: right;
@@ -239,6 +241,10 @@
 
 .shapeLine {
   width: var(--shape-w);
+  color: transparent;
+}
+
+.shapeText {
   color: transparent;
 }
 

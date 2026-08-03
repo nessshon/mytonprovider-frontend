@@ -145,15 +145,22 @@ export const ProviderDetails = ({ detail, copiedKey, onCopy }: ProviderDetailsPr
   )
 }
 
-const SKELETON_SECTIONS: { id: SectionId; label: string; rows: number; copies: number }[] = [
-  { id: "provider", label: "provider.providerTitle", rows: 11, copies: 2 },
-  { id: "software", label: "provider.software", rows: 2, copies: 2 },
-  { id: "benchmarks", label: "provider.benchmarks", rows: 2, copies: 0 },
-  { id: "hardware", label: "provider.hardware", rows: 5, copies: 0 },
-  { id: "network", label: "provider.network", rows: 5, copies: 0 },
+interface SkeletonSection {
+  id: SectionId
+  label: string
+  rows: number
+  copies: number
+  labelWidth: string
+}
+
+const SKELETON_SECTIONS: SkeletonSection[] = [
+  { id: "provider", label: "provider.providerTitle", rows: 11, copies: 2, labelWidth: "7em" },
+  { id: "software", label: "provider.software", rows: 2, copies: 2, labelWidth: "13em" },
+  { id: "benchmarks", label: "provider.benchmarks", rows: 2, copies: 0, labelWidth: "5em" },
+  { id: "hardware", label: "provider.hardware", rows: 5, copies: 0, labelWidth: "4em" },
+  { id: "network", label: "provider.network", rows: 5, copies: 0, labelWidth: "5em" },
 ]
 
-const LABEL_WIDTHS = ["5.5em", "7em", "4.5em", "6.5em", "5em"]
 const VALUE_WIDTHS = ["6em", "4em", "8em", "5em", "7em"]
 
 const line = (width: string) => ({ "--shape-w": width }) as React.CSSProperties
@@ -172,29 +179,23 @@ export const ProviderDetailsSkeleton = () => {
           <div className={styles.statusMain}>
             <div className={styles.statusLabel}>
               <span className={cx(styles.shape, styles.shapeDot)} />
-              <span className={cx(styles.statusText, styles.shape, styles.shapeLine)} style={line("6em")}>
-                &nbsp;
-              </span>
+              <span className={cx(styles.statusText, styles.shape, styles.shapeText)}>{t("status.stable")}</span>
             </div>
             <p className={styles.description}>
-              <span className={cx(styles.shape, styles.shapeLine)} style={line("22em")}>
-                &nbsp;
-              </span>
+              <span className={cx(styles.shape, styles.shapeText)}>{t("status.reason.0")}</span>
             </p>
           </div>
 
           <div className={styles.checks}>
             <div className={styles.checksRow}>
-              <span className={cx(styles.checksLabel, styles.shape, styles.shapeLine)} style={line("6.5em")}>
-                &nbsp;
+              <span className={cx(styles.checksLabel, styles.shape, styles.shapeText)}>
+                {t("status.filesAvailable")}
               </span>
               <span className={cx(styles.badgeTotal, styles.shape, styles.shapeLine)} style={line("4em")}>
                 &nbsp;
               </span>
             </div>
-            <span className={cx(styles.toggle, styles.shape, styles.shapeLine)} style={line("7em")}>
-              &nbsp;
-            </span>
+            <span className={cx(styles.toggle, styles.shape, styles.shapeText)}>{t("status.showDetails")}</span>
           </div>
         </div>
       </div>
@@ -206,7 +207,7 @@ export const ProviderDetailsSkeleton = () => {
               <div key={index} className={styles.row}>
                 <span
                   className={cx(styles.rowLabel, styles.shape, styles.shapeLine)}
-                  style={line(LABEL_WIDTHS[index % LABEL_WIDTHS.length] ?? "5em")}
+                  style={line(section.labelWidth)}
                 >
                   &nbsp;
                 </span>
