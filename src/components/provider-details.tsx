@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import type { ProviderDetail, SectionId } from "@/types/model"
 import { CopyButton } from "./copy-button"
@@ -10,6 +10,27 @@ interface ProviderDetailsProps {
   detail: ProviderDetail
   copiedKey: string | null
   onCopy: (value: string) => void
+}
+
+interface SectionProps {
+  id: SectionId
+  title: string
+  children: ReactNode
+}
+
+const Section = ({ id, title, children }: SectionProps) => {
+  const Icon = SECTION_ICONS[id]
+
+  return (
+    <section className={styles.section}>
+      <h2 className={styles.sectionTitle}>
+        <Icon className={styles.sectionIcon} aria-hidden="true" />
+        <span className={styles.sectionName}>{title}</span>
+      </h2>
+
+      <div className={styles.rows}>{children}</div>
+    </section>
+  )
 }
 
 export const ProviderDetails = ({ detail, copiedKey, onCopy }: ProviderDetailsProps) => {
@@ -78,61 +99,47 @@ export const ProviderDetails = ({ detail, copiedKey, onCopy }: ProviderDetailsPr
       </div>
 
       <div className={styles.groups}>
-        {detail.sections.map((section) => {
-          const Icon = SECTION_ICONS[section.id]
-
-          return (
-            <section key={section.id} className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <Icon className={styles.sectionIcon} aria-hidden="true" />
-                <span className={styles.sectionName}>{section.title}</span>
-              </h2>
-
-              <div className={styles.rows}>
-                {section.fields.map((field) => {
-                  const copyValue = field.copy
-                  return (
-                  <div key={field.label} className={styles.row}>
-                    <span className={styles.rowLabel}>{field.label}</span>
-                    <span className={styles.spacer} />
-                    {field.href ? (
-                      <a
-                        className={cx(styles.rowValue, field.mono && styles.mono)}
-                        href={field.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={field.title}
-                      >
-                        {field.value}
-                      </a>
-                    ) : (
-                      <span
-                        className={cx(
-                          styles.rowValue,
-                          field.uppercase && styles.uppercase,
-                          field.alert && styles.alert,
-                          field.mono && styles.mono,
-                        )}
-                        title={field.title}
-                      >
-                        {field.value}
-                      </span>
+        {detail.sections.map((section) => (
+          <Section key={section.id} id={section.id} title={section.title}>
+            {section.fields.map((field) => (
+              <div key={field.label} className={styles.row}>
+                <span className={styles.rowLabel}>{field.label}</span>
+                <span className={styles.spacer} />
+                {field.href ? (
+                  <a
+                    className={cx(styles.rowValue, field.mono && styles.mono)}
+                    href={field.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={field.title}
+                  >
+                    {field.value}
+                  </a>
+                ) : (
+                  <span
+                    className={cx(
+                      styles.rowValue,
+                      field.uppercase && styles.uppercase,
+                      field.alert && styles.alert,
+                      field.mono && styles.mono,
                     )}
-                    {copyValue && (
-                      <CopyButton
-                        value={copyValue}
-                        copied={copiedKey === copyValue}
-                        onCopy={onCopy}
-                        className={styles.copy}
-                      />
-                    )}
-                  </div>
-                  )
-                })}
+                    title={field.title}
+                  >
+                    {field.value}
+                  </span>
+                )}
+                {field.copy && (
+                  <CopyButton
+                    value={field.copy}
+                    copied={copiedKey === field.copy}
+                    onCopy={onCopy}
+                    className={styles.copy}
+                  />
+                )}
               </div>
-            </section>
-          )
-        })}
+            ))}
+          </Section>
+        ))}
       </div>
     </div>
   )
@@ -193,39 +200,28 @@ export const ProviderDetailsSkeleton = () => {
       </div>
 
       <div className={styles.groups}>
-        {SKELETON_SECTIONS.map((section) => {
-          const Icon = SECTION_ICONS[section.id]
-
-          return (
-            <section key={section.id} className={styles.section}>
-              <h2 className={styles.sectionTitle}>
-                <Icon className={styles.sectionIcon} aria-hidden="true" />
-                <span className={styles.sectionName}>{t(section.label)}</span>
-              </h2>
-
-              <div className={styles.rows}>
-                {Array.from({ length: section.rows }, (_, index) => (
-                  <div key={index} className={styles.row}>
-                    <span
-                      className={cx(styles.rowLabel, styles.shape, styles.shapeLine)}
-                      style={line(LABEL_WIDTHS[index % LABEL_WIDTHS.length] ?? "5em")}
-                    >
-                      &nbsp;
-                    </span>
-                    <span className={styles.spacer} />
-                    <span
-                      className={cx(styles.rowValue, styles.shape, styles.shapeLine)}
-                      style={line(VALUE_WIDTHS[index % VALUE_WIDTHS.length] ?? "6em")}
-                    >
-                      &nbsp;
-                    </span>
-                    {index < section.copies && <span className={cx(styles.copy, styles.shape, styles.shapeCopy)} />}
-                  </div>
-                ))}
+        {SKELETON_SECTIONS.map((section) => (
+          <Section key={section.id} id={section.id} title={t(section.label)}>
+            {Array.from({ length: section.rows }, (_, index) => (
+              <div key={index} className={styles.row}>
+                <span
+                  className={cx(styles.rowLabel, styles.shape, styles.shapeLine)}
+                  style={line(LABEL_WIDTHS[index % LABEL_WIDTHS.length] ?? "5em")}
+                >
+                  &nbsp;
+                </span>
+                <span className={styles.spacer} />
+                <span
+                  className={cx(styles.rowValue, styles.shape, styles.shapeLine)}
+                  style={line(VALUE_WIDTHS[index % VALUE_WIDTHS.length] ?? "6em")}
+                >
+                  &nbsp;
+                </span>
+                {index < section.copies && <span className={cx(styles.copy, styles.shape, styles.shapeCopy)} />}
               </div>
-            </section>
-          )
-        })}
+            ))}
+          </Section>
+        ))}
       </div>
     </div>
   )

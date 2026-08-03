@@ -41,7 +41,7 @@ const providersOf = (data: unknown): Provider[] => {
 
   return list.filter(
     (item): item is Provider =>
-      typeof item === "object" && item !== null && typeof (item as Provider).pubkey === "string",
+      typeof item === "object" && item !== null && typeof (item as { pubkey?: unknown }).pubkey === "string",
   )
 }
 
