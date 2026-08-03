@@ -43,6 +43,18 @@ const STATUS_ORDER: Record<string, number> = {
   stable: 7,
 }
 
+const checkStats = (provider: Provider): StatusReasonStat[] =>
+  (provider.statuses_reason_stats ?? [])
+    .filter((stat) => Number.isFinite(stat?.cnt) && Number.isFinite(stat.reason))
+    .sort((a, b) => b.cnt - a.cnt)
+
+const passedShare = (provider: Provider): number => {
+  const stats = checkStats(provider)
+  const total = stats.reduce((sum, stat) => sum + stat.cnt, 0)
+  if (total === 0) return 0
+  return (stats.find((stat) => stat.reason === 0)?.cnt ?? 0) / total
+}
+
 const classify = (status: number | null, ratio: number): { tone: StatusTone; key: string } => {
   if (status === null) return { tone: "gray", key: "noData" }
 
@@ -207,7 +219,7 @@ const sortValue = (provider: Provider, field: SortField): string | number => {
       return provider.rating
     case "status": {
       const { key } = classify(provider.status, provider.status_ratio)
-      return (STATUS_ORDER[key] ?? 0) + (provider.status === 0 ? provider.status_ratio : 0)
+      return (STATUS_ORDER[key] ?? 0) + passedShare(provider)
     }
     case "freeSpace":
       return freeSpaceOf(provider) ?? -1
@@ -350,9 +362,7 @@ const agoField = (label: string, age: number | null, t: Translate): DetailField 
       }
 
 export const toDetail = (provider: Provider, fetchedAt: number, t: Translate): ProviderDetail => {
-  const stats = (provider.statuses_reason_stats ?? [])
-    .filter((stat) => Number.isFinite(stat?.cnt) && Number.isFinite(stat.reason))
-    .sort((a, b) => b.cnt - a.cnt)
+  const stats = checkStats(provider)
   const total = stats.reduce((sum, stat) => sum + stat.cnt, 0)
   const valid = stats.find((stat) => stat.reason === 0)?.cnt ?? 0
   const reason = dominantReason(stats, total)

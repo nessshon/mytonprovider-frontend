@@ -63,6 +63,22 @@ describe("sortProviders by status", () => {
     expect(labels("asc")).toEqual([...labels("desc")].reverse())
   })
 
+  it("orders equally broken providers by how many checks they still pass", () => {
+    const failing = (passed: number, suffix: string) => ({
+      ...mostlyFailing,
+      pubkey: mostlyFailing.pubkey.slice(0, 58) + suffix,
+      statuses_reason_stats: [
+        { reason: 301, cnt: 100 - passed },
+        { reason: 0, cnt: passed },
+      ],
+    })
+    const none = failing(0, "111111")
+    const some = failing(20, "222222")
+
+    expect(sortProviders([none, some], "status", "desc").map((p) => p.pubkey)).toEqual([some.pubkey, none.pubkey])
+    expect(sortProviders([some, none], "status", "desc").map((p) => p.pubkey)).toEqual([some.pubkey, none.pubkey])
+  })
+
   it("orders equally healthy providers by how many checks they pass", () => {
     const ratios = sortProviders(providers, "status", "desc")
       .filter((provider) => provider.status === 0)
