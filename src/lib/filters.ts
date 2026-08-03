@@ -53,15 +53,12 @@ const toStored = (field: RangeFilterField, value: number): number => {
 
 const isSet = (value: FiltersData[keyof FiltersData]): boolean => value !== undefined && value !== ""
 
-const activeIn = (fields: FilterField[], filters: FiltersData, range: FiltersRange | null): number => {
+const activeIn = (fields: FilterField[], filters: FiltersData): number => {
   let active = 0
 
   for (const field of fields) {
     if (field.kind === "range") {
-      const { min, max } = limitsOf(field, range)
-      const low = toStored(field, min)
-      const high = toStored(field, max)
-      if ((filters[field.from] ?? low) !== low || (filters[field.to] ?? high) !== high) active += 1
+      if (filters[field.from] !== undefined || filters[field.to] !== undefined) active += 1
       continue
     }
 
@@ -159,11 +156,11 @@ export const toGroupViews = (
 ): GroupView[] =>
   FILTER_GROUPS.map((group) => ({
     id: group.id,
-    active: activeIn(group.fields, filters, range),
+    active: activeIn(group.fields, filters),
     fields: group.fields.map((field) => toFieldView(field, filters, range, options)),
   }))
 
-export const countActiveFilters = (filters: FiltersData, range: FiltersRange | null): number =>
-  FILTER_GROUPS.reduce((total, group) => total + activeIn(group.fields, filters, range), 0)
+export const countActiveFilters = (filters: FiltersData): number =>
+  FILTER_GROUPS.reduce((total, group) => total + activeIn(group.fields, filters), 0)
 
 export const isPristine = (filters: FiltersData): boolean => Object.keys(filters).length === 0

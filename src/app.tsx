@@ -119,8 +119,8 @@ export const App = () => {
     active: filtersOpen,
   })
 
-  const activeFilters = useMemo(() => countActiveFilters(filters, catalog.range), [filters, catalog.range])
-  const draftFilters = useMemo(() => countActiveFilters(draft, catalog.range), [draft, catalog.range])
+  const activeFilters = useMemo(() => countActiveFilters(filters), [filters])
+  const draftFilters = useMemo(() => countActiveFilters(draft), [draft])
 
   const { detailFor } = catalog
   const detail = useMemo(() => (detailKey ? detailFor(detailKey) : null), [detailFor, detailKey])

@@ -61,7 +61,7 @@ describe("toGroupViews", () => {
 
 describe("activity", () => {
   it("counts nothing before anything is touched", () => {
-    expect(countActiveFilters(NO_FILTERS, range)).toBe(0)
+    expect(countActiveFilters(NO_FILTERS)).toBe(0)
     expect(view().every((group) => group.active === 0)).toBe(true)
   })
 
@@ -69,14 +69,14 @@ describe("activity", () => {
     const rating = range_("filters.rating")
     const settled = rating.set(rating.low, rating.high)
 
-    expect(countActiveFilters(settled, range)).toBe(0)
+    expect(countActiveFilters(settled)).toBe(0)
   })
 
   it("counts a moved range once, not once per bound", () => {
     const rating = range_("filters.rating")
     const moved = rating.set(0.05, rating.high)
 
-    expect(countActiveFilters(moved, range)).toBe(1)
+    expect(countActiveFilters(moved)).toBe(1)
     expect(view(moved)[0].active).toBe(1)
   })
 
@@ -84,8 +84,8 @@ describe("activity", () => {
     const free = field("filters.onlyWithFreeSpace")
     if (free.kind !== "flag") throw new Error("expected a flag")
 
-    expect(countActiveFilters(free.set(true), range)).toBe(1)
-    expect(countActiveFilters(free.set(undefined), range)).toBe(0)
+    expect(countActiveFilters(free.set(true))).toBe(1)
+    expect(countActiveFilters(free.set(undefined))).toBe(0)
   })
 })
 
