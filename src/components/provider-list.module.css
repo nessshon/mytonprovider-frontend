@@ -21,7 +21,7 @@
 
 .headerRow {
   composes: grid;
-  padding: 0 var(--space-4) var(--space-4) var(--space-3);
+  padding: 0 var(--space-4) var(--space-7) var(--space-3);
 }
 
 .headerCell {
@@ -337,7 +337,7 @@
   display: none;
   align-items: center;
   gap: var(--space-3);
-  padding: 0 2px var(--space-5);
+  padding: 0 2px var(--space-7);
 }
 
 .sortSelect {
