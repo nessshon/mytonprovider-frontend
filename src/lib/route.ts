@@ -10,7 +10,7 @@ export const pubkeyOf = (hash: string): string | null => {
 }
 
 export const providerUrl = (pubkey: string): string =>
-  `${window.location.origin}${window.location.pathname}#${pubkey}`
+  `${window.location.origin}${import.meta.env.BASE_URL}#${pubkey}`
 
 const readPubkey = (): string | null => pubkeyOf(window.location.hash)
 
