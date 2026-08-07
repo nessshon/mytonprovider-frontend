@@ -146,7 +146,12 @@ export const RangeField = ({ fromName, toName, label, min, max, step, integer, l
   const { t } = useTranslation()
   const fromLabel = t("ui.rangeFrom", { label })
   const toLabel = t("ui.rangeTo", { label })
-  const shown = { lowText: formatRangeBound(low, integer), highText: formatRangeBound(high, integer), low, high }
+  const shown = {
+    lowText: formatRangeBound(low, integer),
+    highText: formatRangeBound(high, integer),
+    low,
+    high,
+  }
   const [text, setText] = useState(shown)
 
   if (text.low !== low || text.high !== high) setText(shown)
@@ -155,7 +160,7 @@ export const RangeField = ({ fromName, toName, label, min, max, step, integer, l
   const commit = (raw: string, edge: "low" | "high") => {
     const parsed = parseDecimal(raw)
     const next = clamp(parsed ?? (edge === "low" ? min : max), min, max)
-    const [nextLow, nextHigh] = edge === "low" ? [next, Math.max(next, high)] : [Math.min(next, low), next]
+    const [nextLow, nextHigh] = edge === "low" ? [next, next > high ? max : high] : [next < low ? min : low, next]
 
     setText({
       lowText: formatRangeBound(nextLow, integer),
