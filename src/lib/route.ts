@@ -2,39 +2,44 @@ import { useCallback, useEffect, useState } from "react"
 
 const PUBKEY = /^[0-9a-f]{64}$/i
 
-const base = import.meta.env.BASE_URL
-
 const OPENED = "provider"
 
-const pubkeyOf = (path: string): string | null => {
-  const rest = path.startsWith(base) ? path.slice(base.length) : path.replace(/^\//, "")
-  const candidate = rest.replace(/\/$/, "")
+export const pubkeyOf = (hash: string): string | null => {
+  const candidate = hash.replace(/^#/, "")
   return PUBKEY.test(candidate) ? candidate.toLowerCase() : null
 }
 
-export const providerUrl = (pubkey: string): string => `${window.location.origin}${base}${pubkey}`
+export const providerUrl = (pubkey: string): string =>
+  `${window.location.origin}${window.location.pathname}#${pubkey}`
 
-const readPubkey = (): string | null => pubkeyOf(window.location.pathname)
+const readPubkey = (): string | null => pubkeyOf(window.location.hash)
+
+const addressFor = (pubkey: string | null): string =>
+  `${window.location.pathname}${window.location.search}${pubkey === null ? "" : `#${pubkey}`}`
 
 export const useOpenProvider = (): [string | null, (pubkey: string | null) => void] => {
   const [pubkey, setPubkey] = useState<string | null>(readPubkey)
 
   useEffect(() => {
-    const current = readPubkey()
-    if (current !== null && window.location.pathname !== `${base}${current}`) {
-      window.history.replaceState(null, "", `${base}${current}${window.location.search}`)
+    const sync = () => {
+      const current = readPubkey()
+      if (current !== null && window.location.hash !== `#${current}`) {
+        window.history.replaceState(window.history.state, "", addressFor(current))
+      }
+      setPubkey(current)
+    }
+
+    sync()
+    window.addEventListener("popstate", sync)
+    window.addEventListener("hashchange", sync)
+    return () => {
+      window.removeEventListener("popstate", sync)
+      window.removeEventListener("hashchange", sync)
     }
   }, [])
 
-  useEffect(() => {
-    const onPop = () => setPubkey(readPubkey())
-    window.addEventListener("popstate", onPop)
-    return () => window.removeEventListener("popstate", onPop)
-  }, [])
-
   const open = useCallback((next: string | null) => {
-    const path = next ? `${base}${next}` : base
-    if (window.location.pathname === path) {
+    if (readPubkey() === next) {
       setPubkey(next)
       return
     }
@@ -44,7 +49,7 @@ export const useOpenProvider = (): [string | null, (pubkey: string | null) => vo
       return
     }
 
-    window.history.pushState(next === null ? null : OPENED, "", `${path}${window.location.search}`)
+    window.history.pushState(next === null ? null : OPENED, "", addressFor(next))
     setPubkey(next)
   }, [])
 

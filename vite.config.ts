@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto"
-import { copyFileSync, readFileSync } from "node:fs"
+import { readFileSync } from "node:fs"
 import react from "@vitejs/plugin-react-swc"
 import { defineConfig, loadEnv } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
@@ -27,12 +27,6 @@ export default defineConfig(({ mode }) => {
             .replaceAll("%SITE_URL%", siteUrl)
             .replaceAll("%BG_LIGHT%", backgroundOf(":root {"))
             .replaceAll("%BG_DARK%", backgroundOf('[data-theme="dark"] {')),
-      },
-      {
-        name: "pages-fallback",
-        closeBundle: () => {
-          copyFileSync("dist/index.html", "dist/404.html")
-        },
       },
       {
         name: "preload-fonts",

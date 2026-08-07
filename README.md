@@ -78,7 +78,7 @@ To only build the static files without Node or a running container:
 docker build --target dist --output dist .
 ```
 
-Opening `/<pubkey>` shows that provider straight away; the key is case-insensitive.
+Opening `#<pubkey>` shows that provider straight away; the key is case-insensitive.
 
 ## Deployment
 
