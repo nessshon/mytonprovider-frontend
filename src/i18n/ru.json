@@ -129,7 +129,8 @@
     "software": "Софт",
     "storageGitHash": "ton-storage hash",
     "providerGitHash": "ton-storage-provider hash",
-    "ago": "{{time}} назад"
+    "ago": "{{time}} назад",
+    "justNow": "Только что"
   },
   "status": {
     "accessibleFilesHint": "% доступных для скачивания файлов",

@@ -44,6 +44,30 @@ describe("toRow", () => {
   })
 })
 
+describe("agoField", () => {
+  const value = (age: number) => {
+    const at = 1785545100
+    const provider = { ...stable, is_send_telemetry: true, telemetry: stable.telemetry && { ...stable.telemetry, updated_at: at - age } }
+    return toDetail(provider, at, t)
+      .sections.flatMap((section) => section.fields)
+      .find((field) => field.label === "provider.lastTelemetry")?.value
+  }
+
+  it("says just now instead of counting a zero", () => {
+    expect(value(0)).toBe("provider.justNow")
+    expect(value(59)).toBe("provider.justNow")
+  })
+
+  it("still counts once there is something to count", () => {
+    expect(value(60)).toBe("provider.ago")
+    expect(value(3600)).toBe("provider.ago")
+  })
+
+  it("says just now when the clock runs behind the node", () => {
+    expect(value(-30)).toBe("provider.justNow")
+  })
+})
+
 describe("sortProviders by status", () => {
   const labels = (direction: "asc" | "desc") =>
     sortProviders(providers, "status", direction).map((provider) => toRow(provider, t).status.label)

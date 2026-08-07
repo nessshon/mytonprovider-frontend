@@ -3,7 +3,7 @@ export type Translate = (key: string, options?: Record<string, unknown>) => stri
 const SECONDS_IN_YEAR = 31536000
 export const SECONDS_IN_DAY = 86400
 const SECONDS_IN_HOUR = 3600
-const SECONDS_IN_MINUTE = 60
+export const SECONDS_IN_MINUTE = 60
 
 export const formatNumber = (value: number, digits: number): string =>
   Number.isFinite(value) ? String(Number(value.toFixed(digits))) : ""

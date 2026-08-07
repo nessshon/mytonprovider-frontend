@@ -17,6 +17,7 @@ import {
   formatPercent,
   shortenMiddle,
   type Translate,
+  SECONDS_IN_MINUTE,
 } from "./format"
 
 const NANO = 1e9
@@ -262,7 +263,7 @@ const agoField = (label: string, age: number | null, t: Translate): DetailField 
     ? textField(label, null)
     : {
         label,
-        value: t("provider.ago", { time: formatDuration(age, t) }),
+        value: age < SECONDS_IN_MINUTE ? t("provider.justNow") : t("provider.ago", { time: formatDuration(age, t) }),
         alert: age > STALE_SECONDS,
       }
 

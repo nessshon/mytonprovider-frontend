@@ -129,7 +129,8 @@
     "software": "Software",
     "storageGitHash": "ton-storage hash",
     "providerGitHash": "ton-storage-provider hash",
-    "ago": "{{time}} ago"
+    "ago": "{{time}} ago",
+    "justNow": "Just now"
   },
   "status": {
     "accessibleFilesHint": "% of stored files accessible for download",
