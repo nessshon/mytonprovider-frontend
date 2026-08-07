@@ -5,6 +5,8 @@ import { FILTER_GROUPS, type Bounds, type FilterField, type RangeFilterField } f
 
 export const NO_FILTERS: FiltersData = {}
 
+export const DEFAULT_FILTERS: FiltersData = { has_free_space: true, uptime_gt_percent: 20 }
+
 export type FilterBounds = Record<string, Bounds>
 export type FilterOptions = Record<string, string[]>
 
@@ -233,4 +235,7 @@ export const toGroupViews = (filters: FiltersData, bounds: FilterBounds | null, 
 export const countActiveFilters = (filters: FiltersData): number =>
   FILTER_GROUPS.reduce((total, group) => total + activeIn(group.fields, filters), 0)
 
-export const isPristine = (filters: FiltersData): boolean => Object.keys(filters).length === 0
+export const isPristine = (filters: FiltersData): boolean => {
+  const keys = new Set([...Object.keys(filters), ...Object.keys(DEFAULT_FILTERS)]) as Set<keyof FiltersData>
+  return [...keys].every((key) => filters[key] === DEFAULT_FILTERS[key])
+}

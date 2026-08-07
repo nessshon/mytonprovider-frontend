@@ -3,8 +3,8 @@ import { ArrowUp, Search, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { FiltersData } from "@/types/filters"
 import { PAGE_SIZE, useCatalog } from "@/lib/catalog"
-import { NO_FILTERS, countActiveFilters } from "@/lib/filters"
-import { FAVORITES_KEY, readStoredStrings, writeStored } from "@/lib/storage"
+import { DEFAULT_FILTERS, countActiveFilters, isPristine } from "@/lib/filters"
+import { FAVORITES_KEY, readStoredStrings, removeStored, writeStored } from "@/lib/storage"
 import { copyText, scrollToTop } from "@/lib/dom"
 import { providerUrl, useOpenProvider } from "@/lib/route"
 import Header from "@/components/header"
@@ -42,8 +42,8 @@ const LoadFailure = ({ status, compact, onRetry }: LoadFailureProps) => {
 export const App = () => {
   const { t } = useTranslation()
 
-  const [filters, setFilters] = useState<FiltersData>(NO_FILTERS)
-  const [draft, setDraft] = useState<FiltersData>(NO_FILTERS)
+  const [filters, setFilters] = useState<FiltersData>(DEFAULT_FILTERS)
+  const [draft, setDraft] = useState<FiltersData>(DEFAULT_FILTERS)
   const [favorites, setFavorites] = useState<string[]>(() => readStoredStrings(FAVORITES_KEY))
 
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -90,7 +90,8 @@ export const App = () => {
   }, [anySheetOpen])
 
   useEffect(() => {
-    writeStored(FAVORITES_KEY, JSON.stringify(favorites))
+    if (favorites.length === 0) removeStored(FAVORITES_KEY)
+    else writeStored(FAVORITES_KEY, JSON.stringify(favorites))
   }, [favorites])
 
   useEffect(() => () => window.clearTimeout(copyTimer.current), [])
@@ -126,7 +127,8 @@ export const App = () => {
 
   const matching = filtersOpen ? catalog.countFor(draft) : catalog.total
 
-  const activeFilters = useMemo(() => countActiveFilters(filters), [filters])
+  const filtersTouched = useMemo(() => !isPristine(filters), [filters])
+  const draftTouched = useMemo(() => !isPristine(draft), [draft])
   const draftFilters = useMemo(() => countActiveFilters(draft), [draft])
 
   const { detailFor } = catalog
@@ -139,8 +141,8 @@ export const App = () => {
   }, [detailKey, detail, catalog.loading, catalog.failure, openProvider])
 
   const resetFilters = () => {
-    setFilters(NO_FILTERS)
-    setDraft(NO_FILTERS)
+    setFilters(DEFAULT_FILTERS)
+    setDraft(DEFAULT_FILTERS)
   }
 
   const openFilters = () => {
@@ -186,7 +188,7 @@ export const App = () => {
           </div>
 
           <span className={styles.filterSlot}>
-            <FilterButton variant="icon" active={activeFilters > 0} onClick={openFilters} />
+            <FilterButton variant="icon" active={filtersTouched} onClick={openFilters} />
           </span>
         </div>
 
@@ -219,7 +221,7 @@ export const App = () => {
               copiedKey={copiedKey}
               sortField={catalog.sortField}
               sortDirection={catalog.sortDirection}
-              filtersActive={activeFilters > 0}
+              filtersActive={filtersTouched}
               loading={catalog.showSkeleton}
               skeletonRows={PAGE_SIZE}
               pinnedSkeletonRows={favorites.length}
@@ -266,7 +268,7 @@ export const App = () => {
           label={t("filters.title")}
           title={t("filters.title")}
           badge={draftFilters}
-          onReset={draftFilters > 0 ? resetFilters : undefined}
+          onReset={draftTouched ? resetFilters : undefined}
           onClose={closeFilters}
           footer={
             <button

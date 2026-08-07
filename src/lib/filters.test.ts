@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  DEFAULT_FILTERS,
   NO_FILTERS,
   countActiveFilters,
   deriveBounds,
@@ -133,20 +134,33 @@ describe("setting a value", () => {
 })
 
 describe("isPristine", () => {
-  it("is true only while nothing is stored", () => {
-    const rating = range_("filters.rating")
+  it("is true only while the defaults are untouched", () => {
+    const rating = range_("filters.rating", DEFAULT_FILTERS)
 
-    expect(isPristine(NO_FILTERS)).toBe(true)
+    expect(isPristine(DEFAULT_FILTERS)).toBe(true)
+    expect(isPristine(NO_FILTERS)).toBe(false)
     expect(isPristine(rating.set(0.05, rating.high))).toBe(false)
   })
 
   it("comes back once a range is dragged onto its own bounds again", () => {
-    const rating = range_("filters.rating")
+    const rating = range_("filters.rating", DEFAULT_FILTERS)
     const moved = rating.set(0.05, rating.high)
     const back = range_("filters.rating", moved).set(rating.low, rating.high)
 
-    expect(back).toEqual({})
+    expect(back).toEqual(DEFAULT_FILTERS)
     expect(isPristine(back)).toBe(true)
+  })
+})
+
+describe("DEFAULT_FILTERS", () => {
+  it("keeps only providers that are up and have room, as the catalog opens", () => {
+    const kept = providers.filter((provider) => matches(provider, DEFAULT_FILTERS, NOW))
+
+    expect(DEFAULT_FILTERS).toEqual({ has_free_space: true, uptime_gt_percent: 20 })
+    expect(kept.length).toBeLessThan(providers.length)
+    for (const provider of kept) {
+      expect(provider.uptime).toBeGreaterThan(20)
+    }
   })
 })
 

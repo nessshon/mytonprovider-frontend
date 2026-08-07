@@ -18,6 +18,14 @@ export const writeStored = (key: string, value: string): void => {
   }
 }
 
+export const removeStored = (key: string): void => {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    return
+  }
+}
+
 export const readStoredStrings = (key: string): string[] => {
   const stored = readStored(key)
   if (!stored) return []

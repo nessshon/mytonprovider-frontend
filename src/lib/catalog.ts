@@ -7,7 +7,7 @@ import { ApiError, fetchProviders } from "./api"
 import { matchesQuery, sortProviders, toDetail, toRow } from "./model"
 import { deriveBounds, matches, optionsFor, type FilterBounds, type FilterOptions } from "./filters"
 
-export const PAGE_SIZE = 10
+export const PAGE_SIZE = 20
 const FRESH_FOR_MS = 120_000
 
 interface Snapshot {
