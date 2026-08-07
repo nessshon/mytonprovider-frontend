@@ -1,8 +1,11 @@
-import { useEffect, useRef, type ReactNode } from "react"
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { X } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { useSheetDrag } from "@/lib/sheet-drag"
 import { IconButton } from "./icon-button"
 import styles from "./sheet.module.css"
+
+const LEAVE_GUARD_MS = 400
 
 interface SheetProps {
   open: boolean
@@ -18,6 +21,16 @@ interface SheetProps {
 export const Sheet = ({ open, label, title, badge, footer, children, onReset, onClose }: SheetProps) => {
   const { t } = useTranslation()
   const ref = useRef<HTMLDialogElement>(null)
+  const timer = useRef(0)
+  const [leaving, setLeaving] = useState(false)
+
+  const requestClose = useCallback(() => {
+    setLeaving(true)
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(onClose, LEAVE_GUARD_MS)
+  }, [onClose])
+
+  const drag = useSheetDrag(open, requestClose)
 
   useEffect(() => {
     const dialog = ref.current
@@ -28,7 +41,10 @@ export const Sheet = ({ open, label, title, badge, footer, children, onReset, on
       dialog.focus()
     }
     if (!open && dialog.open) dialog.close()
+    if (open) setLeaving(false)
   }, [open])
+
+  useEffect(() => () => window.clearTimeout(timer.current), [])
 
   useEffect(() => {
     const dialog = ref.current
@@ -36,12 +52,12 @@ export const Sheet = ({ open, label, title, badge, footer, children, onReset, on
 
     const cancel = (event: Event) => {
       event.preventDefault()
-      onClose()
+      requestClose()
     }
 
     dialog.addEventListener("cancel", cancel)
     return () => dialog.removeEventListener("cancel", cancel)
-  }, [onClose])
+  }, [requestClose])
 
   return (
     <dialog
@@ -49,11 +65,20 @@ export const Sheet = ({ open, label, title, badge, footer, children, onReset, on
       className={styles.sheet}
       aria-label={label}
       tabIndex={-1}
+      data-dragging={drag.dragging ? "" : undefined}
+      data-leaving={leaving ? "" : undefined}
+      style={drag.offset === null ? undefined : ({ "--sheet-y": `${drag.offset}px` } as CSSProperties)}
       onClick={(event) => {
-        if (event.target === ref.current) onClose()
+        if (event.target === ref.current) requestClose()
+      }}
+      onTransitionEnd={(event) => {
+        if (!leaving || event.target !== ref.current) return
+        window.clearTimeout(timer.current)
+        onClose()
       }}
     >
-      <div className={styles.header}>
+      <div className={styles.header} onPointerDown={drag.onPointerDown}>
+        <span className={styles.grabber} aria-hidden="true" />
         {title && <span className={styles.title}>{title}</span>}
         {badge !== undefined && badge > 0 && <span className={styles.badge}>{badge}</span>}
         <span className={styles.spacer} />
@@ -62,12 +87,14 @@ export const Sheet = ({ open, label, title, badge, footer, children, onReset, on
             {t("buttons.reset")}
           </button>
         )}
-        <IconButton label={t("ui.close")} onClick={onClose}>
+        <IconButton label={t("ui.close")} onClick={requestClose}>
           <X className={styles.closeIcon} />
         </IconButton>
       </div>
 
-      <div className={styles.body}>{children}</div>
+      <div className={styles.body} ref={drag.bodyRef} onPointerDown={drag.onPointerDown}>
+        {children}
+      </div>
 
       {footer && <div className={styles.footer}>{footer}</div>}
     </dialog>

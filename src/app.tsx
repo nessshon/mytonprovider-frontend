@@ -135,6 +135,7 @@ export const App = () => {
   const detail = useMemo(() => (detailKey ? detailFor(detailKey) : null), [detailFor, detailKey])
 
   const closeFilters = useCallback(() => setFiltersOpen(false), [])
+  const closeDetail = useCallback(() => openProvider(null), [openProvider])
 
   useEffect(() => {
     if (detailKey !== null && !catalog.loading && !catalog.failure && !detail) openProvider(null)
@@ -288,7 +289,7 @@ export const App = () => {
           )}
         </Sheet>
 
-        <Sheet open={detailKey !== null} label={t("provider.providerTitle")} onClose={() => openProvider(null)}>
+        <Sheet open={detailKey !== null} label={t("provider.providerTitle")} onClose={closeDetail}>
           {detailKey !== null &&
             (detail ? (
               <ProviderDetails key={detailKey} detail={detail} copiedKey={copiedKey} onCopy={copy} />
