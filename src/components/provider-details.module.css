@@ -248,6 +248,14 @@
   color: transparent;
 }
 
+.shapeLabel {
+  composes: shapeText;
+}
+
+.rowLabel.shapeLabel {
+  flex: 0 1 auto;
+}
+
 .shapeCopy {
   align-self: center;
   width: var(--control-xs);

@@ -148,17 +148,53 @@ export const ProviderDetails = ({ detail, copiedKey, onCopy }: ProviderDetailsPr
 interface SkeletonSection {
   id: SectionId
   label: string
-  rows: number
+  rows: string[]
   copies: number
-  labelWidth: string
 }
 
 const SKELETON_SECTIONS: SkeletonSection[] = [
-  { id: "provider", label: "provider.providerTitle", rows: 11, copies: 2, labelWidth: "7em" },
-  { id: "software", label: "provider.software", rows: 2, copies: 2, labelWidth: "13em" },
-  { id: "benchmarks", label: "provider.benchmarks", rows: 2, copies: 0, labelWidth: "5em" },
-  { id: "hardware", label: "provider.hardware", rows: 5, copies: 0, labelWidth: "4em" },
-  { id: "network", label: "provider.network", rows: 5, copies: 0, labelWidth: "5em" },
+  {
+    id: "provider",
+    label: "provider.providerTitle",
+    copies: 2,
+    rows: [
+      "table.publicKey",
+      "provider.address",
+      "provider.span",
+      "provider.maxBagSize",
+      "provider.workingTime",
+      "provider.lastOnline",
+      "provider.lastTelemetry",
+      "provider.location",
+      "provider.uptime",
+      "provider.rating",
+      "provider.price",
+    ],
+  },
+  {
+    id: "software",
+    label: "provider.software",
+    copies: 2,
+    rows: ["provider.storageGitHash", "provider.providerGitHash"],
+  },
+  {
+    id: "benchmarks",
+    label: "provider.benchmarks",
+    copies: 0,
+    rows: ["provider.diskReadSpeed", "provider.diskWriteSpeed"],
+  },
+  {
+    id: "hardware",
+    label: "provider.hardware",
+    copies: 0,
+    rows: ["provider.cpuName", "provider.cpuNumber", "provider.cpuIsVirtual", "provider.ram", "provider.totalProviderSpace"],
+  },
+  {
+    id: "network",
+    label: "provider.network",
+    copies: 0,
+    rows: ["provider.speedtestDownload", "provider.speedtestUpload", "provider.speedtestPing", "provider.country", "provider.isp"],
+  },
 ]
 
 const VALUE_WIDTHS = ["6em", "4em", "8em", "5em", "7em"]
@@ -203,14 +239,9 @@ export const ProviderDetailsSkeleton = () => {
       <div className={styles.groups}>
         {SKELETON_SECTIONS.map((section) => (
           <Section key={section.id} id={section.id} title={t(section.label)}>
-            {Array.from({ length: section.rows }, (_, index) => (
-              <div key={index} className={styles.row}>
-                <span
-                  className={cx(styles.rowLabel, styles.shape, styles.shapeLine)}
-                  style={line(section.labelWidth)}
-                >
-                  &nbsp;
-                </span>
+            {section.rows.map((row, index) => (
+              <div key={row} className={styles.row}>
+                <span className={cx(styles.rowLabel, styles.shape, styles.shapeLabel)}>{t(row)}</span>
                 <span className={styles.spacer} />
                 <span
                   className={cx(styles.rowValue, styles.shape, styles.shapeLine)}
