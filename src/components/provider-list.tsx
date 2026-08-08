@@ -298,8 +298,19 @@ export const ProviderList = ({
             </>
           )
 
+          const label = t(column.label)
+          const announced = isActive
+            ? t(sortDirection === "asc" ? "ui.sortedAsc" : "ui.sortedDesc", { label })
+            : t("ui.sortColumn", { label })
+
           return (
-            <button key={column.id} type="button" className={className} onClick={() => onSort(column.sort)}>
+            <button
+              key={column.id}
+              type="button"
+              className={className}
+              aria-label={announced}
+              onClick={() => onSort(column.sort)}
+            >
               {content}
             </button>
           )
