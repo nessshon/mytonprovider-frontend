@@ -22,6 +22,7 @@ export const Sheet = ({ open, label, title, badge, footer, children, onReset, on
   const { t } = useTranslation()
   const ref = useRef<HTMLDialogElement>(null)
   const timer = useRef(0)
+  const pressedBackdrop = useRef(false)
   const [leaving, setLeaving] = useState(false)
 
   const requestClose = useCallback(() => {
@@ -68,8 +69,11 @@ export const Sheet = ({ open, label, title, badge, footer, children, onReset, on
       data-dragging={drag.dragging ? "" : undefined}
       data-leaving={leaving ? "" : undefined}
       style={drag.offset === null ? undefined : ({ "--sheet-y": `${drag.offset}px` } as CSSProperties)}
+      onPointerDown={(event) => {
+        pressedBackdrop.current = event.target === ref.current
+      }}
       onClick={(event) => {
-        if (event.target === ref.current) requestClose()
+        if (event.target === ref.current && pressedBackdrop.current) requestClose()
       }}
       onTransitionEnd={(event) => {
         if (!leaving || event.target !== ref.current) return
