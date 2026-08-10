@@ -55,7 +55,7 @@
   flex: none;
 }
 
-.hint:focus-visible::after {
+.sortable:focus-visible .hint::after {
   opacity: 1;
 }
 

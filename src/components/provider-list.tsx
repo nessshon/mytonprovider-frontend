@@ -285,8 +285,13 @@ export const ProviderList = ({
             <>
               <span className={styles.headerLabel}>{t(column.label)}</span>
               {column.hint && (
-                <span className={styles.hint} data-hint={t(column.hint)} tabIndex={0} aria-label={t(column.hint)}>
-                  <HelpCircle className={styles.hintIcon} aria-hidden="true" />
+                <span
+                  className={styles.hint}
+                  data-hint={t(column.hint)}
+                  aria-hidden="true"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <HelpCircle className={styles.hintIcon} />
                 </span>
               )}
               {isActive &&
@@ -299,9 +304,10 @@ export const ProviderList = ({
           )
 
           const label = t(column.label)
-          const announced = isActive
+          const state = isActive
             ? t(sortDirection === "asc" ? "ui.sortedAsc" : "ui.sortedDesc", { label })
             : t("ui.sortColumn", { label })
+          const announced = column.hint ? `${state}. ${t(column.hint)}` : state
 
           return (
             <button
