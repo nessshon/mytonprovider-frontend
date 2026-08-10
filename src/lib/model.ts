@@ -19,6 +19,7 @@ import {
   type Translate,
   SECONDS_IN_MINUTE,
 } from "./format"
+import { toNonBounceable } from "./ton-address"
 
 const NANO = 1e9
 const BITS_IN_MEGABIT = 1e6
@@ -276,6 +277,7 @@ export const toDetail = (provider: Provider, fetchedAt: number, t: Translate): P
   const country = provider.location?.country
   const onlineAge = provider.last_online_check_time ? fetchedAt - provider.last_online_check_time : null
   const telemetryAge = provider.telemetry?.updated_at ? fetchedAt - provider.telemetry.updated_at : null
+  const address = provider.address ? toNonBounceable(provider.address) : null
 
   const sections: DetailSection[] = [
     {
@@ -290,13 +292,13 @@ export const toDetail = (provider: Provider, fetchedAt: number, t: Translate): P
           uppercase: true,
           mono: true,
         },
-        provider.address
+        address
           ? {
               label: t("provider.address"),
-              value: shortenMiddle(provider.address, 6, 6),
-              title: provider.address,
-              href: `https://tonscan.org/address/${encodeURIComponent(provider.address)}`,
-              copy: provider.address,
+              value: shortenMiddle(address, 6, 6),
+              title: address,
+              href: `https://tonscan.org/address/${encodeURIComponent(address)}`,
+              copy: address,
               mono: true,
             }
           : textField(t("provider.address"), null),
