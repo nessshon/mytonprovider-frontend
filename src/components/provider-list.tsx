@@ -1,5 +1,5 @@
-import type { ReactNode } from "react"
-import { ArrowDown, ArrowUp, ArrowUpRight, Check, ChevronDown, HelpCircle, Star } from "lucide-react"
+import { useEffect, useRef, type ReactNode } from "react"
+import { ArrowDown, ArrowUp, Check, ChevronDown, HelpCircle, Share2, Star } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { ProviderRow, SortDirection, SortField } from "@/types/model"
 import { CopyButton } from "./copy-button"
@@ -7,6 +7,7 @@ import { IconButton } from "./icon-button"
 import { FilterButton } from "./filter-button"
 import styles from "./provider-list.module.css"
 import { cx } from "@/lib/cx"
+import { STATUS_KEYS } from "@/lib/model"
 import { providerUrl } from "@/lib/route"
 
 type StatId = "rating" | "uptime" | "price" | "freeSpace" | "workingTime" | "location"
@@ -15,21 +16,23 @@ interface Column {
   id: StatId | "pubkey" | "status"
   label: string
   hint?: string
-  sort: SortField
+  sort?: SortField
 }
 
 const COLUMNS: Column[] = [
-  { id: "pubkey", label: "table.publicKey", sort: "pubkey" },
+  { id: "pubkey", label: "table.publicKey" },
   { id: "rating", label: "table.rating", sort: "rating" },
   { id: "status", label: "table.status", hint: "status.accessibleFilesHint", sort: "status" },
   { id: "uptime", label: "table.uptime", hint: "status.uptimeHint", sort: "uptime" },
   { id: "price", label: "table.price", hint: "status.priceHint", sort: "price" },
-  { id: "freeSpace", label: "table.freeSpace", hint: "status.freeSpaceHint", sort: "freeSpace" },
+  { id: "freeSpace", label: "table.freeSpace", sort: "freeSpace" },
   { id: "workingTime", label: "table.workingTime", sort: "workingTime" },
   { id: "location", label: "table.location", sort: "location" },
 ]
 
 const STAGGER_LIMIT = 10
+
+const KEY_PLACEHOLDER = "000000…000000"
 
 const ORDER: Record<StatId, string> = {
   rating: styles.orderRating,
@@ -39,6 +42,10 @@ const ORDER: Record<StatId, string> = {
   workingTime: styles.orderWorkingTime,
   location: styles.orderLocation,
 }
+
+const SORT_COLUMNS = COLUMNS.filter(
+  (column): column is Column & { sort: SortField } => column.sort !== undefined,
+)
 
 const STAT_COLUMNS = COLUMNS.filter(
   (column): column is Column & { id: StatId } => column.id !== "pubkey" && column.id !== "status",
@@ -82,6 +89,7 @@ interface CardProps {
   sharedUrl: boolean
   row: ProviderRow
   index: number
+  fresh: boolean
   favorite: boolean
   copied: boolean
   onToggleFavorite: (pubkey: string) => void
@@ -90,6 +98,28 @@ interface CardProps {
 }
 
 const shape = (...names: string[]) => cx(styles.shape, ...names)
+
+const WIDEST_RATIO = "99.9%"
+
+const StatusCell = ({ status, className }: { status: ProviderRow["status"]; className?: string }) => {
+  const { t } = useTranslation()
+
+  return (
+    <span className={styles.statusStack}>
+      <span className={styles.statusRow}>
+        <span className={cx(styles.statusLabel, className)}>{status.label}</span>
+        {status.ratio && <span className={cx(styles.ratio, className)}>{status.ratio}</span>}
+      </span>
+      <span className={styles.statusGhost} aria-hidden="true">
+        {STATUS_KEYS.map((key) => (
+          <span key={key}>
+            {t(`status.${key}`)} {WIDEST_RATIO}
+          </span>
+        ))}
+      </span>
+    </span>
+  )
+}
 
 const SkeletonCard = ({ index }: { index: number }) => {
   const { t } = useTranslation()
@@ -103,10 +133,15 @@ const SkeletonCard = ({ index }: { index: number }) => {
       <div className={styles.head}>
         <span className={cx(shape(styles.shapeCircleSm), styles.orderFavorite)} />
         <div className={cx(styles.key, styles.orderKey)}>
-          <span className={shape(styles.shapeKey)} />
+          <span className={cx(styles.keyText, shape(styles.shapeText))}>{KEY_PLACEHOLDER}</span>
+          <span className={shape(styles.shapeCopy)} />
         </div>
         <span className={cx(styles.status, styles.orderStatus)}>
-          <span className={shape(styles.shapeStatus)} />
+          <span className={cx(styles.dot, shape())} />
+          <StatusCell
+            status={{ tone: "green", label: t("status.stable"), ratio: WIDEST_RATIO }}
+            className={shape(styles.shapeText)}
+          />
         </span>
 
         <span className={cx(shape(styles.shapeCircleSm), styles.orderShare)} />
@@ -138,12 +173,23 @@ const Cell = ({ id, label, children }: { id: StatId; label: string; children: Re
   </div>
 )
 
-const ProviderCard = ({ row, index, favorite, copied, sharedUrl, onToggleFavorite, onCopy, onShare, onOpen }: CardProps) => {
+const ProviderCard = ({
+  row,
+  index,
+  fresh,
+  favorite,
+  copied,
+  sharedUrl,
+  onToggleFavorite,
+  onCopy,
+  onShare,
+  onOpen,
+}: CardProps) => {
   const { t } = useTranslation()
 
   return (
     <article
-      className={styles.card}
+      className={cx(styles.card, fresh && styles.enter)}
       style={{ "--card-index": index } as React.CSSProperties}
       role="button"
       tabIndex={0}
@@ -177,8 +223,7 @@ const ProviderCard = ({ row, index, favorite, copied, sharedUrl, onToggleFavorit
 
         <span className={cx(styles.status, styles.orderStatus)} data-tone={row.status.tone}>
           <span className={styles.dot} aria-hidden="true" />
-          <span className={styles.statusLabel}>{row.status.label}</span>
-          {row.status.ratio && <span className={styles.ratio}>{row.status.ratio}</span>}
+          <StatusCell status={row.status} />
         </span>
 
         <IconButton
@@ -193,7 +238,7 @@ const ProviderCard = ({ row, index, favorite, copied, sharedUrl, onToggleFavorit
           {sharedUrl ? (
             <Check className={styles.shareIcon} aria-hidden="true" />
           ) : (
-            <ArrowUpRight className={styles.shareIcon} aria-hidden="true" />
+            <Share2 className={styles.shareIcon} aria-hidden="true" />
           )}
         </IconButton>
       </div>
@@ -247,12 +292,18 @@ export const ProviderList = ({
   onOpenFilters,
 }: ProviderListProps) => {
   const { t } = useTranslation()
+  const seen = useRef(new Set<string>())
+
+  useEffect(() => {
+    for (const row of rows) seen.current.add(row.pubkey)
+  }, [rows])
 
   const renderCard = (row: ProviderRow, index: number) => (
     <ProviderCard
       key={row.pubkey}
       row={row}
       index={index % STAGGER_LIMIT}
+      fresh={!seen.current.has(row.pubkey)}
       favorite={favorites.includes(row.pubkey)}
       copied={copiedKey === row.pubkey}
       sharedUrl={copiedKey === providerUrl(row.pubkey)}
@@ -270,7 +321,7 @@ export const ProviderList = ({
     : pinned.map(renderCard)
 
   return (
-    <div>
+    <div className={styles.table}>
       {pinnedCards.length > 0 && (
         <div className={cx(styles.list, styles.pinned)}>{pinnedCards}</div>
       )}
@@ -278,8 +329,8 @@ export const ProviderList = ({
       <div className={styles.headerRow}>
         <span />
         {COLUMNS.map((column) => {
-          const isActive = column.sort === sortField
-          const className = cx(styles.headerCell, styles.sortable, isActive && styles.active)
+          const sort = column.sort
+          const isActive = sort !== undefined && sort === sortField
 
           const content = (
             <>
@@ -291,18 +342,32 @@ export const ProviderList = ({
                   aria-hidden="true"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <HelpCircle className={styles.hintIcon} />
+                  <HelpCircle className={styles.hintIcon} strokeWidth={1.5} />
                 </span>
               )}
-              {isActive &&
-                (sortDirection === "asc" ? (
+              {sort !== undefined &&
+                (isActive && sortDirection === "asc" ? (
                   <ArrowUp className={styles.sortIcon} aria-hidden="true" />
                 ) : (
-                  <ArrowDown className={styles.sortIcon} aria-hidden="true" />
+                  <ArrowDown className={cx(styles.sortIcon, !isActive && styles.sortIconIdle)} aria-hidden="true" />
                 ))}
             </>
           )
 
+          if (sort === undefined) {
+            return (
+              <span key={column.id} className={styles.headerCell}>
+                {content}
+              </span>
+            )
+          }
+
+          const className = cx(
+            styles.headerCell,
+            styles.sortable,
+            isActive && styles.active,
+            column.id === "status" && styles.headerDotOffset,
+          )
           const label = t(column.label)
           const state = isActive
             ? t(sortDirection === "asc" ? "ui.sortedAsc" : "ui.sortedDesc", { label })
@@ -315,7 +380,7 @@ export const ProviderList = ({
               type="button"
               className={className}
               aria-label={announced}
-              onClick={() => onSort(column.sort)}
+              onClick={() => onSort(sort)}
             >
               {content}
             </button>
@@ -335,7 +400,7 @@ export const ProviderList = ({
             aria-label={t("ui.sortBy")}
             onChange={(event) => onSort(event.target.value as SortField)}
           >
-            {COLUMNS.map((column) => (
+            {SORT_COLUMNS.map((column) => (
               <option key={column.id} value={column.sort}>
                 {t(column.label)}
               </option>

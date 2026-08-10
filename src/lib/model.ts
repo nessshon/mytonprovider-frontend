@@ -55,6 +55,17 @@ const passedShare = (provider: Provider): number => {
   return (stats.find((stat) => stat.reason === 0)?.cnt ?? 0) / total
 }
 
+export const STATUS_KEYS = [
+  "noData",
+  "unstable",
+  "partial",
+  "stable",
+  "unavailable",
+  "notStored",
+  "noProofs",
+  "unknown",
+] as const
+
 const classify = (status: number | null, ratio: number): { tone: StatusTone; key: string } => {
   if (status === null) return { tone: "gray", key: "noData" }
 
@@ -112,8 +123,6 @@ export const toRow = (provider: Provider, t: Translate): ProviderRow => {
 
 const sortValue = (provider: Provider, field: SortField): string | number => {
   switch (field) {
-    case "pubkey":
-      return provider.pubkey
     case "location":
       return provider.location?.country ?? ""
     case "uptime":
