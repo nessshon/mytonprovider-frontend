@@ -10,7 +10,7 @@
   justify-content: center;
   gap: var(--space-4) var(--space-3);
   width: 100%;
-  max-width: var(--app-max);
+  max-width: calc(var(--content-max) + var(--space-6) * 2);
   margin: 0 auto;
   padding: 22px var(--space-6) var(--space-9);
   border-top: 1px solid var(--border);

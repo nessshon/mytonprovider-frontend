@@ -98,7 +98,8 @@
   --icon-md: 20px;
   --icon-lg: 22px;
 
-  --app-max: 1440px;
+  --content-max: 1080px;
+  --reading-max: 700px;
   --header-h: 76px;
   --row-py: 13px;
   --sheet-max: 840px;
