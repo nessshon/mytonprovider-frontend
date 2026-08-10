@@ -137,9 +137,8 @@
   },
   "status": {
     "accessibleFilesHint": "% of stored files accessible for download",
-    "uptimeHint": "% of time online for uploads/contracts",
+    "uptimeHint": "% of time online",
     "priceHint": "per 200 GB per 30 days",
-    "freeSpaceHint": "Space the provider still has available",
     "filesAvailable": "Files available",
     "showDetails": "Show breakdown",
     "hideDetails": "Hide breakdown",
