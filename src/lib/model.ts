@@ -32,7 +32,20 @@ const NOT_STORED = [301, 302]
 const NO_PROOFS = [401, 402, 403]
 const KNOWN_REASONS = [0, ...UNAVAILABLE, ...NOT_STORED, ...NO_PROOFS]
 
-const STATUS_ORDER: Record<string, number> = {
+export const STATUS_KEYS = [
+  "noData",
+  "unstable",
+  "partial",
+  "stable",
+  "unavailable",
+  "notStored",
+  "noProofs",
+  "unknown",
+] as const
+
+type StatusKey = (typeof STATUS_KEYS)[number]
+
+const STATUS_ORDER: Record<StatusKey, number> = {
   noData: 0,
   unknown: 1,
   unavailable: 2,
@@ -55,18 +68,7 @@ const passedShare = (provider: Provider): number => {
   return (stats.find((stat) => stat.reason === 0)?.cnt ?? 0) / total
 }
 
-export const STATUS_KEYS = [
-  "noData",
-  "unstable",
-  "partial",
-  "stable",
-  "unavailable",
-  "notStored",
-  "noProofs",
-  "unknown",
-] as const
-
-const classify = (status: number | null, ratio: number): { tone: StatusTone; key: string } => {
+const classify = (status: number | null, ratio: number): { tone: StatusTone; key: StatusKey } => {
   if (status === null) return { tone: "gray", key: "noData" }
 
   if (status === 0) {
