@@ -136,7 +136,6 @@
   background: var(--surface);
   box-shadow: var(--shadow-1);
   cursor: pointer;
-  outline-offset: 2px;
   text-align: left;
 }
 
@@ -151,8 +150,10 @@
   }
 }
 
-.card:focus-visible {
+.card:focus {
+  outline: none;
   background: var(--surface-2);
+  box-shadow: var(--shadow-1), inset 0 0 0 1px var(--focus-edge);
 }
 
 .head,
