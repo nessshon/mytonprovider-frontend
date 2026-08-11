@@ -145,8 +145,10 @@
   animation-delay: calc(var(--card-index, 0) * 28ms);
 }
 
-.card:hover {
-  background: var(--surface-2);
+@media (hover: hover) {
+  .card:hover {
+    background: var(--surface-2);
+  }
 }
 
 .card:focus-visible {
