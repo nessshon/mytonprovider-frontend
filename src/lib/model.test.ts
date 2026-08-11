@@ -17,7 +17,7 @@ describe("toRow", () => {
 
     expect(row.keyShort).toBe("3a6523…b6b466")
     expect(row.status.label).toBe("status.stable")
-    expect(row.status.ratio).toBe("99.8%")
+    expect(row.status.ratio).toBe("99%")
     expect(row.uptime).toBe("99.72%")
     expect(row.price).toBe("10")
     expect(row.rating).toBe("20.42")

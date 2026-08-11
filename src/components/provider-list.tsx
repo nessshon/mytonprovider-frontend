@@ -99,7 +99,7 @@ interface CardProps {
 
 const shape = (...names: string[]) => cx(styles.shape, ...names)
 
-const WIDEST_RATIO = "99.9%"
+const WIDEST_RATIO = "100%"
 
 const StatusCell = ({ status, className }: { status: ProviderRow["status"]; className?: string }) => {
   const { t } = useTranslation()
@@ -113,7 +113,8 @@ const StatusCell = ({ status, className }: { status: ProviderRow["status"]; clas
       <span className={styles.statusGhost} aria-hidden="true">
         {STATUS_KEYS.map((key) => (
           <span key={key}>
-            {t(`status.${key}`)} {WIDEST_RATIO}
+            {t(`status.${key}`)}
+            <span className={styles.ratio}>{WIDEST_RATIO}</span>
           </span>
         ))}
       </span>
@@ -136,12 +137,9 @@ const SkeletonCard = ({ index }: { index: number }) => {
           <span className={cx(styles.keyText, shape(styles.shapeText))}>{KEY_PLACEHOLDER}</span>
           <span className={shape(styles.shapeCopy)} />
         </div>
-        <span className={cx(styles.status, styles.orderStatus)}>
-          <span className={cx(styles.dot, shape())} />
-          <StatusCell
-            status={{ tone: "green", label: t("status.stable"), ratio: WIDEST_RATIO }}
-            className={shape(styles.shapeText)}
-          />
+        <span className={cx(styles.status, styles.orderStatus, shape(styles.statusShape))}>
+          <span className={styles.dot} />
+          <StatusCell status={{ tone: "green", label: t("status.stable"), ratio: WIDEST_RATIO }} />
         </span>
 
         <span className={cx(shape(styles.shapeCircleSm), styles.orderShare)} />
@@ -217,7 +215,9 @@ const ProviderCard = ({
         </IconButton>
 
         <div className={cx(styles.key, styles.orderKey)}>
-          <span className={styles.keyText}>{row.keyShort}</span>
+          <span className={styles.keyText} title={row.pubkey}>
+            {row.keyShort}
+          </span>
           <CopyButton value={row.pubkey} copied={copied} onCopy={onCopy} label={`${t("ui.copy")} ${row.keyShort}`} />
         </div>
 

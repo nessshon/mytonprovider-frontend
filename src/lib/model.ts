@@ -89,7 +89,7 @@ const toStatusView = (status: number | null, ratio: number, t: Translate): Statu
   return {
     tone,
     label: t(`status.${key}`),
-    ratio: status === 0 ? formatPercent(ratio * 100, 1) : null,
+    ratio: status === 0 ? formatPercent(Math.floor(ratio * 100), 0) : null,
   }
 }
 
