@@ -81,7 +81,6 @@
 }
 
 .reset {
-  composes: outline from "./shared.module.css";
   height: var(--control-sm);
   padding: 0 var(--pad-pill);
   border-radius: var(--radius-pill);
@@ -90,8 +89,7 @@
   font-weight: 500;
 }
 
-.reset.reset:hover {
-  border-color: var(--tone-red-text);
+.reset:hover {
   background: var(--tone-red-weak);
 }
 
