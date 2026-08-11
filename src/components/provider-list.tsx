@@ -101,6 +101,16 @@ const shape = (...names: string[]) => cx(styles.shape, ...names)
 
 const WIDEST_RATIO = "100%"
 
+const KeyText = ({ value }: { value: string }) => {
+  const [head, tail] = value.split("…")
+
+  return (
+    <>
+      {head}…<span className={styles.keyTail}>{tail}</span>
+    </>
+  )
+}
+
 const StatusCell = ({ status, className }: { status: ProviderRow["status"]; className?: string }) => {
   const { t } = useTranslation()
 
@@ -134,7 +144,9 @@ const SkeletonCard = ({ index }: { index: number }) => {
       <div className={styles.head}>
         <span className={cx(shape(styles.shapeCircleSm), styles.orderFavorite)} />
         <div className={cx(styles.key, styles.orderKey)}>
-          <span className={cx(styles.keyText, shape(styles.shapeText))}>{KEY_PLACEHOLDER}</span>
+          <span className={cx(styles.keyText, shape(styles.shapeText))}>
+            <KeyText value={KEY_PLACEHOLDER} />
+          </span>
           <span className={shape(styles.shapeCopy)} />
         </div>
         <span className={cx(styles.status, styles.orderStatus, shape(styles.statusShape))}>
@@ -216,7 +228,7 @@ const ProviderCard = ({
 
         <div className={cx(styles.key, styles.orderKey)}>
           <span className={styles.keyText} title={row.pubkey}>
-            {row.keyShort}
+            <KeyText value={row.keyShort} />
           </span>
           <CopyButton value={row.pubkey} copied={copied} onCopy={onCopy} label={`${t("ui.copy")} ${row.keyShort}`} />
         </div>

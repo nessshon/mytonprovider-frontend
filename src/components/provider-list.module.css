@@ -499,10 +499,6 @@
     display: block;
   }
 
-  .statusGhost {
-    display: none;
-  }
-
   .stats {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -523,6 +519,23 @@
 @media (max-width: 539px) {
   .stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 422px) {
+  .keyTail {
+    display: none;
+  }
+}
+
+@media (max-width: 373px) {
+  .head {
+    flex-wrap: wrap;
+    row-gap: var(--space-3);
+  }
+
+  .orderStatus {
+    order: 11;
   }
 }
 
