@@ -23,19 +23,24 @@
 
   --tone-gray: #98b2bf;
   --tone-gray-weak: #f0f3f6;
-  --tone-gray-text: #6b7280;
+  --tone-gray-text: #5f6d74;
+  --tone-gray-ring: #808f97;
   --tone-green: #47c58a;
   --tone-green-weak: #ecf8f2;
-  --tone-green-text: #15803d;
+  --tone-green-text: #1f7b50;
+  --tone-green-ring: #2e9f6a;
   --tone-yellow: #e5a10a;
   --tone-yellow-weak: #fdf4e3;
-  --tone-yellow-text: #a16207;
+  --tone-yellow-text: #876722;
+  --tone-yellow-ring: #ad8732;
   --tone-red: #ed6767;
   --tone-red-weak: #fdeeee;
-  --tone-red-text: #dc2626;
+  --tone-red-text: #c63131;
+  --tone-red-ring: #d56f6f;
   --tone-orange: #d1600b;
   --tone-orange-weak: #fbefe4;
-  --tone-orange-text: #c2410c;
+  --tone-orange-text: #9c5927;
+  --tone-orange-ring: #c87a40;
 
   --scrim: rgba(6, 12, 18, 0.5);
 
@@ -139,19 +144,24 @@
 
   --tone-gray: #83838a;
   --tone-gray-weak: #33333a;
-  --tone-gray-text: #9b9ba3;
+  --tone-gray-text: #a6a6b0;
+  --tone-gray-ring: #646471;
   --tone-green: #32d583;
   --tone-green-weak: #1e2b25;
-  --tone-green-text: var(--tone-green);
+  --tone-green-text: #32ae70;
+  --tone-green-ring: #2b724e;
   --tone-yellow: #e2a92f;
   --tone-yellow-weak: #2f2a1a;
-  --tone-yellow-text: var(--tone-yellow);
+  --tone-yellow-text: #c19538;
+  --tone-yellow-ring: #7a622e;
   --tone-red: #ff5c5c;
   --tone-red-weak: #342223;
-  --tone-red-text: var(--tone-red);
+  --tone-red-text: #d97e7e;
+  --tone-red-ring: #ac4141;
   --tone-orange: #e07a2c;
   --tone-orange-weak: #322418;
-  --tone-orange-text: var(--tone-orange);
+  --tone-orange-text: #cd8954;
+  --tone-orange-ring: #8b5a35;
 
   --focus-ring: 0 0 0 4px rgba(1, 164, 245, 0.16);
 
@@ -164,28 +174,33 @@
   --tone: var(--tone-gray);
   --tone-weak: var(--tone-gray-weak);
   --tone-text: var(--tone-gray-text);
+  --tone-ring: var(--tone-gray-ring);
 }
 
 [data-tone="green"] {
   --tone: var(--tone-green);
   --tone-weak: var(--tone-green-weak);
   --tone-text: var(--tone-green-text);
+  --tone-ring: var(--tone-green-ring);
 }
 
 [data-tone="yellow"] {
   --tone: var(--tone-yellow);
   --tone-weak: var(--tone-yellow-weak);
   --tone-text: var(--tone-yellow-text);
+  --tone-ring: var(--tone-yellow-ring);
 }
 
 [data-tone="red"] {
   --tone: var(--tone-red);
   --tone-weak: var(--tone-red-weak);
   --tone-text: var(--tone-red-text);
+  --tone-ring: var(--tone-red-ring);
 }
 
 [data-tone="orange"] {
   --tone: var(--tone-orange);
   --tone-weak: var(--tone-orange-weak);
   --tone-text: var(--tone-orange-text);
+  --tone-ring: var(--tone-orange-ring);
 }
