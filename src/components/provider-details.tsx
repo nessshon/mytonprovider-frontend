@@ -59,6 +59,7 @@ export const ProviderDetails = ({ detail, copiedKey, onCopy }: ProviderDetailsPr
             <div className={styles.statusLabel}>
               <span className={styles.dot} />
               <span className={styles.statusText}>{detail.status.label}</span>
+              {detail.checks && <span className={styles.statusRatio}>{detail.checks.percent}</span>}
             </div>
             <p className={styles.description}>{detail.description}</p>
           </div>
@@ -152,6 +153,8 @@ interface SkeletonSection {
   copies: number
 }
 
+const RATIO_PLACEHOLDER = "100%"
+
 const SKELETON_SECTIONS: SkeletonSection[] = [
   {
     id: "provider",
@@ -213,9 +216,10 @@ export const ProviderDetailsSkeleton = () => {
 
         <div className={styles.statusBody}>
           <div className={styles.statusMain}>
-            <div className={styles.statusLabel}>
-              <span className={cx(styles.shape, styles.shapeDot)} />
-              <span className={cx(styles.statusText, styles.shape, styles.shapeText)}>{t("status.stable")}</span>
+            <div className={cx(styles.statusLabel, styles.shape, styles.statusShape)}>
+              <span className={styles.dot} />
+              <span className={styles.statusText}>{t("status.unstable")}</span>
+              <span className={styles.statusRatio}>{RATIO_PLACEHOLDER}</span>
             </div>
             <p className={styles.description}>
               <span className={cx(styles.shape, styles.shapeText)}>{t("status.reason.0")}</span>

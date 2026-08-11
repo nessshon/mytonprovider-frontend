@@ -331,7 +331,15 @@ export const toDetail = (provider: Provider, fetchedAt: number, t: Translate): P
   return {
     status: toStatusView(provider.status, provider.status_ratio, t),
     description: reason === null ? t("status.notChecked") : reasonLabel(reason, t),
-    checks: total > 0 ? { valid, total, tone: classify(provider.status, valid / total).tone } : null,
+    checks:
+      total > 0
+        ? {
+            valid,
+            total,
+            tone: classify(provider.status, valid / total).tone,
+            percent: formatPercent((valid / total) * 100),
+          }
+        : null,
     breakdown: total > 0 ? buildBreakdown(stats, total, t) : [],
     sections,
   }

@@ -124,7 +124,7 @@ describe("toDetail", () => {
   it("ignores broken entries in the check statistics", () => {
     const broken = { ...stable, statuses_reason_stats: [null, { reason: 0, cnt: 5 }] as never }
 
-    expect(toDetail(broken, NOW, t).checks).toEqual({ valid: 5, total: 5, tone: "green" })
+    expect(toDetail(broken, NOW, t).checks).toEqual({ valid: 5, total: 5, tone: "green", percent: "100%" })
   })
 
   it("reports the dominant failure instead of the successful minority", () => {
@@ -135,7 +135,7 @@ describe("toDetail", () => {
     const detail = toDetail(stable, NOW, t)
 
     expect(detail.description).toBe("status.reason.0")
-    expect(detail.checks).toEqual({ valid: 432, total: 433, tone: "green" })
+    expect(detail.checks).toEqual({ valid: 432, total: 433, tone: "green", percent: "99.77%" })
   })
 
   it("drops the checks block when nothing was ever checked", () => {

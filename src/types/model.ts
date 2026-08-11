@@ -61,7 +61,7 @@ export interface BreakdownItem {
 export interface ProviderDetail {
   status: StatusView
   description: string
-  checks: { valid: number; total: number; tone: StatusTone } | null
+  checks: { valid: number; total: number; tone: StatusTone; percent: string } | null
   breakdown: BreakdownItem[]
   sections: DetailSection[]
 }

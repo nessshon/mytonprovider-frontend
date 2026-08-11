@@ -55,6 +55,13 @@
   color: var(--tone-text);
 }
 
+.statusRatio {
+  font-size: var(--font-sm);
+  font-weight: 400;
+  color: var(--tone-text);
+  font-variant-numeric: tabular-nums;
+}
+
 .description {
   margin: var(--space-2) 0 0;
   font-size: var(--font-sm);
@@ -263,8 +270,9 @@
   border-radius: var(--radius-pill);
 }
 
-.shapeDot {
-  width: var(--space-3);
-  height: var(--space-3);
+.statusShape.statusShape {
+  display: flex;
+  max-width: none;
   border-radius: var(--radius-pill);
+  color: transparent;
 }
