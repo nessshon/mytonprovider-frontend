@@ -53,6 +53,15 @@ describe("toGroupViews", () => {
 
   it("shows scaled ranges in the unit the label promises", () => {
     expect(range_("filters.maxSpan")).toMatchObject({ min: 30, max: 77 })
+    expect(range_("filters.totalProviderSpace")).toMatchObject({ min: 4101, max: 16107 })
+    expect(range_("filters.totalRam")).toMatchObject({ min: 3, max: 32 })
+    expect(range_("filters.diskReadSpeed")).toMatchObject({ min: 63, max: 64 })
+  })
+
+  it("stores a moved range in the unit the endpoint compares against", () => {
+    const ram = range_("filters.totalRam")
+
+    expect(ram.set(16, ram.high).total_ram_gt).toBe(17.179869)
   })
 })
 

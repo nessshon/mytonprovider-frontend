@@ -5,6 +5,11 @@ import { BYTES_IN_GB, BYTES_IN_GIB, SECONDS_IN_DAY, parseSpeed } from "./format"
 
 export const PING_LIMIT = 100000
 
+const GIB_IN_GB = BYTES_IN_GB / BYTES_IN_GIB
+const GB_IN_GIB = BYTES_IN_GIB / BYTES_IN_GB
+const MIB_IN_MB = 1e6 / 1024 ** 2
+const KIB_IN_MIB = 1024
+
 export interface Bounds {
   min: number
   max: number
@@ -177,6 +182,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         label: "filters.maxBagSize",
         step: 1,
         integer: true,
+        scale: MIB_IN_MB,
         fallback: { min: 0, max: 40000 },
         read: (provider) => number(provider.max_bag_size_bytes / 1024 ** 2),
       },
@@ -192,6 +198,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         label: "filters.diskReadSpeed",
         step: 1,
         integer: true,
+        scale: KIB_IN_MIB,
         fallback: { min: 0, max: 1e6 },
         read: (provider) => {
           const speed = parseSpeed(telemetry(provider)?.qd64_disk_read_speed)
@@ -205,6 +212,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         label: "filters.diskWriteSpeed",
         step: 1,
         integer: true,
+        scale: KIB_IN_MIB,
         fallback: { min: 0, max: 1e6 },
         read: (provider) => {
           const speed = parseSpeed(telemetry(provider)?.qd64_disk_write_speed)
@@ -223,6 +231,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         label: "filters.totalProviderSpace",
         step: 10,
         integer: true,
+        scale: GIB_IN_GB,
         fallback: { min: 0, max: 40000 },
         read: (provider) => toUnits(telemetry(provider)?.total_provider_space_bytes, BYTES_IN_GIB),
       },
@@ -233,6 +242,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         label: "filters.usedProviderSpace",
         step: 10,
         integer: true,
+        scale: GIB_IN_GB,
         fallback: { min: 0, max: 40000 },
         read: (provider) => toUnits(telemetry(provider)?.used_provider_space_bytes, BYTES_IN_GIB),
       },
@@ -265,6 +275,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         label: "filters.totalRam",
         step: 1,
         integer: false,
+        scale: GB_IN_GIB,
         fallback: { min: 0, max: 512 },
         read: (provider) => toUnits(telemetry(provider)?.total_ram_bytes, BYTES_IN_GB),
       },
