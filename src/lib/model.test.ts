@@ -154,16 +154,16 @@ describe("toDetail", () => {
   it("prints memory in binary units and everything else in decimal ones", () => {
     const telemetry = stable.telemetry && { ...stable.telemetry, total_ram_bytes: 17.18e9, usage_ram_bytes: 8.59e9 }
 
-    expect(fieldValue({ ...stable, telemetry }, "provider.ram")).toBe("8 / 16 units.gib")
-    expect(fieldValue(stable, "provider.totalProviderSpace")).toBe("3.93 / 4.1 units.tb")
-    expect(fieldValue(stable, "provider.maxBagSize")).toBe("85.9 units.gb")
-    expect(fieldValue(stable, "provider.speedtestDownload")).toBe("1970 units.mbps")
+    expect(fieldValue({ ...stable, telemetry }, "provider.ram")).toBe("8 / 16 GiB")
+    expect(fieldValue(stable, "provider.totalProviderSpace")).toBe("3.93 / 4.1 TB")
+    expect(fieldValue(stable, "provider.maxBagSize")).toBe("85.9 GB")
+    expect(fieldValue(stable, "provider.speedtestDownload")).toBe("1970 Mbit/s")
   })
 
   it("hides readings the node could not measure", () => {
     expect(fieldValue(brokenPing, "provider.speedtestPing")).toBe("—")
     expect(fieldValue(brokenPing, "provider.speedtestDownload")).toBe("—")
-    expect(fieldValue(stable, "provider.speedtestPing")).toBe("16 units.ms")
+    expect(fieldValue(stable, "provider.speedtestPing")).toBe("16 ms")
   })
 })
 

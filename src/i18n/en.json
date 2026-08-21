@@ -61,8 +61,8 @@
     "usedRamPercent": "Used RAM, %",
     "diskReadSpeed": "Disk read, MiB/s",
     "diskWriteSpeed": "Disk write, MiB/s",
-    "downloadSpeed": "Download, Mbps",
-    "uploadSpeed": "Upload, Mbps",
+    "downloadSpeed": "Download, Mbit/s",
+    "uploadSpeed": "Upload, Mbit/s",
     "ping": "Ping, ms",
     "country": "Country contains",
     "isp": "ISP contains",
@@ -74,20 +74,6 @@
     "any": "All",
     "yes": "Yes",
     "no": "No"
-  },
-  "units": {
-    "b": "B",
-    "kb": "KB",
-    "mb": "MB",
-    "gb": "GB",
-    "tb": "TB",
-    "kib": "KiB",
-    "mib": "MiB",
-    "gib": "GiB",
-    "tib": "TiB",
-    "mbps": "Mbps",
-    "ms": "ms",
-    "gram": "GRAM"
   },
   "time": {
     "sec": "{{count}} sec",

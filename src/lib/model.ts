@@ -27,6 +27,9 @@ import { toNonBounceable } from "./ton-address"
 
 const NANO = 1e9
 const BITS_IN_MEGABIT = 1e6
+const MBIT_PER_SECOND = "Mbit/s"
+const MILLISECONDS = "ms"
+const GRAM = "GRAM"
 const STALE_SECONDS = 600
 const PING_LIMIT = 100000
 const EMPTY = "—"
@@ -106,20 +109,20 @@ const freeSpaceOf = (provider: Provider): number | null => {
   return Math.max(0, total - used)
 }
 
-const splitSpace = (bytes: number | null, t: Translate): { value: string; unit: string } => {
+const splitSpace = (bytes: number | null): { value: string; unit: string } => {
   if (bytes === null) return { value: EMPTY, unit: "" }
 
   const { divisor, unit } = scaleFor(bytes, DECIMAL)
-  return { value: formatNumber(bytes / divisor, 2), unit: t(unit) }
+  return { value: formatNumber(bytes / divisor, 2), unit }
 }
 
-const share = (used: number | null | undefined, total: number, scale: ByteScale, t: Translate): string => {
+const share = (used: number | null | undefined, total: number, scale: ByteScale): string => {
   const { divisor, unit } = scaleFor(total, scale)
-  return `${formatNumber((used ?? 0) / divisor, 2)} / ${formatNumber(total / divisor, 2)} ${t(unit)}`
+  return `${formatNumber((used ?? 0) / divisor, 2)} / ${formatNumber(total / divisor, 2)} ${unit}`
 }
 
 export const toRow = (provider: Provider, t: Translate): ProviderRow => {
-  const free = splitSpace(freeSpaceOf(provider), t)
+  const free = splitSpace(freeSpaceOf(provider))
 
   return {
     pubkey: provider.pubkey,
@@ -127,7 +130,7 @@ export const toRow = (provider: Provider, t: Translate): ProviderRow => {
     status: toStatusView(provider.status, provider.status_ratio, t),
     uptime: formatPercent(provider.uptime),
     price: formatNumber(provider.price / NANO, 2),
-    priceUnit: t("units.gram"),
+    priceUnit: GRAM,
     rating: formatNumber(provider.rating, 2),
     freeSpace: free.value,
     freeSpaceUnit: free.unit,
@@ -207,12 +210,12 @@ const hardwareSection = (telemetry: Telemetry, t: Translate): DetailSection => (
     ),
     textField(
       t("provider.ram"),
-      telemetry.total_ram_bytes ? share(telemetry.usage_ram_bytes, telemetry.total_ram_bytes, BINARY, t) : null,
+      telemetry.total_ram_bytes ? share(telemetry.usage_ram_bytes, telemetry.total_ram_bytes, BINARY) : null,
     ),
     textField(
       t("provider.totalProviderSpace"),
       telemetry.total_provider_space_bytes
-        ? share(telemetry.used_provider_space_bytes, telemetry.total_provider_space_bytes, DECIMAL, t)
+        ? share(telemetry.used_provider_space_bytes, telemetry.total_provider_space_bytes, DECIMAL)
         : null,
     ),
   ],
@@ -225,19 +228,19 @@ const networkSection = (telemetry: Telemetry, t: Translate): DetailSection => ({
     textField(
       t("provider.speedtestDownload"),
       telemetry.speedtest_download
-        ? `${formatNumber(telemetry.speedtest_download / BITS_IN_MEGABIT, 0)} ${t("units.mbps")}`
+        ? `${formatNumber(telemetry.speedtest_download / BITS_IN_MEGABIT, 0)} ${MBIT_PER_SECOND}`
         : null,
     ),
     textField(
       t("provider.speedtestUpload"),
       telemetry.speedtest_upload
-        ? `${formatNumber(telemetry.speedtest_upload / BITS_IN_MEGABIT, 0)} ${t("units.mbps")}`
+        ? `${formatNumber(telemetry.speedtest_upload / BITS_IN_MEGABIT, 0)} ${MBIT_PER_SECOND}`
         : null,
     ),
     textField(
       t("provider.speedtestPing"),
       telemetry.speedtest_ping && telemetry.speedtest_ping < PING_LIMIT
-        ? `${formatNumber(telemetry.speedtest_ping, 1)} ${t("units.ms")}`
+        ? `${formatNumber(telemetry.speedtest_ping, 1)} ${MILLISECONDS}`
         : null,
     ),
     textField(t("provider.country"), telemetry.country),
@@ -328,14 +331,14 @@ export const toDetail = (provider: Provider, fetchedAt: number, t: Translate): P
             }
           : textField(t("provider.address"), null),
         textField(t("provider.span"), `${formatDuration(provider.min_span, t)} – ${formatDuration(provider.max_span, t)}`),
-        textField(t("provider.maxBagSize"), formatBytes(provider.max_bag_size_bytes, t)),
+        textField(t("provider.maxBagSize"), formatBytes(provider.max_bag_size_bytes)),
         textField(t("provider.workingTime"), formatDuration(provider.working_time, t)),
         agoField(t("provider.lastOnline"), onlineAge, t),
         agoField(t("provider.lastTelemetry"), provider.is_send_telemetry ? telemetryAge : null, t),
         textField(t("provider.location"), country ? [country, city].filter(Boolean).join(", ") : t("unknown")),
         textField(t("provider.uptime"), formatPercent(provider.uptime)),
         textField(t("provider.rating"), formatNumber(provider.rating, 2)),
-        textField(t("provider.price"), `${formatNumber(provider.price / NANO, 2)} ${t("units.gram")}`),
+        textField(t("provider.price"), `${formatNumber(provider.price / NANO, 2)} ${GRAM}`),
       ],
     },
   ]

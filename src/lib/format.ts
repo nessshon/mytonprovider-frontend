@@ -50,12 +50,12 @@ export interface ByteScale {
 
 export const DECIMAL: ByteScale = {
   step: 1000,
-  units: ["units.b", "units.kb", "units.mb", "units.gb", "units.tb"],
+  units: ["B", "KB", "MB", "GB", "TB"],
 }
 
 export const BINARY: ByteScale = {
   step: 1024,
-  units: ["units.b", "units.kib", "units.mib", "units.gib", "units.tib"],
+  units: ["B", "KiB", "MiB", "GiB", "TiB"],
 }
 
 export const scaleFor = (bytes: number, scale: ByteScale): { divisor: number; unit: string } => {
@@ -70,10 +70,10 @@ export const scaleFor = (bytes: number, scale: ByteScale): { divisor: number; un
   return { divisor, unit: scale.units[index] }
 }
 
-export const formatBytes = (bytes: number, t: Translate): string => {
+export const formatBytes = (bytes: number): string => {
   if (!Number.isFinite(bytes) || bytes <= 0) return ""
   const { divisor, unit } = scaleFor(bytes, DECIMAL)
-  return `${formatNumber(bytes / divisor, 2)} ${t(unit)}`
+  return `${formatNumber(bytes / divisor, 2)} ${unit}`
 }
 
 export const formatRangeBound = (value: number, integer: boolean): string =>
