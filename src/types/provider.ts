@@ -1,4 +1,4 @@
-export interface Telemetry {
+export interface ApiTelemetry {
   storage_git_hash?: string | null
   provider_git_hash?: string | null
   total_provider_space?: number | null
@@ -17,6 +17,14 @@ export interface Telemetry {
   speedtest_ping?: number | null
   country?: string | null
   isp?: string | null
+}
+
+export interface Telemetry
+  extends Omit<ApiTelemetry, "total_provider_space" | "used_provider_space" | "total_ram" | "usage_ram"> {
+  total_provider_space_bytes?: number | null
+  used_provider_space_bytes?: number | null
+  total_ram_bytes?: number | null
+  usage_ram_bytes?: number | null
 }
 
 interface ProviderLocation {
@@ -48,4 +56,8 @@ export interface Provider {
   is_send_telemetry: boolean
   telemetry: Telemetry | null
   statuses_reason_stats?: StatusReasonStat[]
+}
+
+export interface ApiProvider extends Omit<Provider, "telemetry"> {
+  telemetry: ApiTelemetry | null
 }

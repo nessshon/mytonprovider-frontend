@@ -15,8 +15,12 @@ import {
   formatDuration,
   formatNumber,
   formatPercent,
+  scaleFor,
   shortenMiddle,
+  type ByteScale,
   type Translate,
+  BINARY,
+  DECIMAL,
   SECONDS_IN_MINUTE,
 } from "./format"
 import { toNonBounceable } from "./ton-address"
@@ -96,14 +100,26 @@ const toStatusView = (status: number | null, ratio: number, t: Translate): Statu
 }
 
 const freeSpaceOf = (provider: Provider): number | null => {
-  const total = provider.telemetry?.total_provider_space
-  const used = provider.telemetry?.used_provider_space
+  const total = provider.telemetry?.total_provider_space_bytes
+  const used = provider.telemetry?.used_provider_space_bytes
   if (total === null || total === undefined || used === null || used === undefined) return null
   return Math.max(0, total - used)
 }
 
+const splitSpace = (bytes: number | null, t: Translate): { value: string; unit: string } => {
+  if (bytes === null) return { value: EMPTY, unit: "" }
+
+  const { divisor, unit } = scaleFor(bytes, DECIMAL)
+  return { value: formatNumber(bytes / divisor, 2), unit: t(unit) }
+}
+
+const share = (used: number | null | undefined, total: number, scale: ByteScale, t: Translate): string => {
+  const { divisor, unit } = scaleFor(total, scale)
+  return `${formatNumber((used ?? 0) / divisor, 2)} / ${formatNumber(total / divisor, 2)} ${t(unit)}`
+}
+
 export const toRow = (provider: Provider, t: Translate): ProviderRow => {
-  const free = freeSpaceOf(provider)
+  const free = splitSpace(freeSpaceOf(provider), t)
 
   return {
     pubkey: provider.pubkey,
@@ -113,8 +129,8 @@ export const toRow = (provider: Provider, t: Translate): ProviderRow => {
     price: formatNumber(provider.price / NANO, 2),
     priceUnit: t("units.gram"),
     rating: formatNumber(provider.rating, 2),
-    freeSpace: free === null ? EMPTY : formatNumber(free, free < 10 ? 1 : 0),
-    freeSpaceUnit: free === null ? "" : t("units.gb"),
+    freeSpace: free.value,
+    freeSpaceUnit: free.unit,
     location: provider.location?.country ?? t("unknown"),
     workingTime: formatDuration(provider.working_time, t),
   }
@@ -191,14 +207,12 @@ const hardwareSection = (telemetry: Telemetry, t: Translate): DetailSection => (
     ),
     textField(
       t("provider.ram"),
-      telemetry.total_ram
-        ? `${formatNumber(telemetry.usage_ram ?? 0, 1)} / ${formatNumber(telemetry.total_ram, 1)} ${t("units.gb")}`
-        : null,
+      telemetry.total_ram_bytes ? share(telemetry.usage_ram_bytes, telemetry.total_ram_bytes, BINARY, t) : null,
     ),
     textField(
       t("provider.totalProviderSpace"),
-      telemetry.total_provider_space
-        ? `${formatNumber(telemetry.used_provider_space ?? 0, 1)} / ${formatNumber(telemetry.total_provider_space, 1)} ${t("units.gb")}`
+      telemetry.total_provider_space_bytes
+        ? share(telemetry.used_provider_space_bytes, telemetry.total_provider_space_bytes, DECIMAL, t)
         : null,
     ),
   ],

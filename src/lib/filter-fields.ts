@@ -1,7 +1,7 @@
 import type { FiltersData } from "@/types/filters"
 import type { SectionId } from "@/types/model"
 import type { Provider, Telemetry } from "@/types/provider"
-import { SECONDS_IN_DAY, parseSpeed } from "./format"
+import { BYTES_IN_GB, BYTES_IN_GIB, SECONDS_IN_DAY, parseSpeed } from "./format"
 
 export const PING_LIMIT = 100000
 
@@ -66,10 +66,15 @@ const number = (value: number | null | undefined): number | null =>
 
 const text = (value: string | null | undefined): string | null => (value ? value : null)
 
+const toUnits = (bytes: number | null | undefined, factor: number): number | null => {
+  const value = number(bytes)
+  return value === null ? null : value / factor
+}
+
 const freeSpace = (provider: Provider): number | null => {
   const info = telemetry(provider)
-  const total = number(info?.total_provider_space)
-  const used = number(info?.used_provider_space)
+  const total = number(info?.total_provider_space_bytes)
+  const used = number(info?.used_provider_space_bytes)
   return total === null || used === null ? null : Math.max(0, total - used)
 }
 
@@ -219,7 +224,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         step: 10,
         integer: true,
         fallback: { min: 0, max: 40000 },
-        read: (provider) => number(telemetry(provider)?.total_provider_space),
+        read: (provider) => toUnits(telemetry(provider)?.total_provider_space_bytes, BYTES_IN_GIB),
       },
       {
         kind: "range",
@@ -229,7 +234,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         step: 10,
         integer: true,
         fallback: { min: 0, max: 40000 },
-        read: (provider) => number(telemetry(provider)?.used_provider_space),
+        read: (provider) => toUnits(telemetry(provider)?.used_provider_space_bytes, BYTES_IN_GIB),
       },
       {
         kind: "range",
@@ -261,7 +266,7 @@ export const FILTER_GROUPS: FilterGroup[] = [
         step: 1,
         integer: false,
         fallback: { min: 0, max: 512 },
-        read: (provider) => number(telemetry(provider)?.total_ram),
+        read: (provider) => toUnits(telemetry(provider)?.total_ram_bytes, BYTES_IN_GB),
       },
       {
         kind: "range",

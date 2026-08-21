@@ -1,4 +1,5 @@
-import type { Provider } from "@/types/provider"
+import type { ApiProvider, ApiTelemetry, Provider, Telemetry } from "@/types/provider"
+import { BYTES_IN_GB, BYTES_IN_GIB } from "./format"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://mytonprovider.org/api/v1"
 const PAGE_LIMIT = 200
@@ -41,9 +42,30 @@ const pageOf = (data: unknown): unknown[] => {
   return list
 }
 
-const isProvider = (item: unknown): item is Provider =>
+const isProvider = (item: unknown): item is ApiProvider =>
   typeof item === "object" && item !== null && typeof (item as { pubkey?: unknown }).pubkey === "string"
 
+const bytesOf = (value: number | null | undefined, factor: number): number | null =>
+  typeof value === "number" && Number.isFinite(value) ? value * factor : null
+
+const toTelemetry = ({
+  total_provider_space,
+  used_provider_space,
+  total_ram,
+  usage_ram,
+  ...telemetry
+}: ApiTelemetry): Telemetry => ({
+  ...telemetry,
+  total_provider_space_bytes: bytesOf(total_provider_space, BYTES_IN_GIB),
+  used_provider_space_bytes: bytesOf(used_provider_space, BYTES_IN_GIB),
+  total_ram_bytes: bytesOf(total_ram, BYTES_IN_GB),
+  usage_ram_bytes: bytesOf(usage_ram, BYTES_IN_GB),
+})
+
+export const toProvider = ({ telemetry, ...provider }: ApiProvider): Provider => ({
+  ...provider,
+  telemetry: telemetry ? toTelemetry(telemetry) : null,
+})
 
 export const fetchProviders = async (signal: AbortSignal): Promise<Provider[]> => {
   const providers: Provider[] = []
@@ -58,7 +80,7 @@ export const fetchProviders = async (signal: AbortSignal): Promise<Provider[]> =
 
     const page = pageOf(data)
     offset += page.length
-    providers.push(...page.filter(isProvider))
+    providers.push(...page.filter(isProvider).map(toProvider))
 
     if (page.length < PAGE_LIMIT || offset >= MAX_PROVIDERS) {
       return providers

@@ -76,9 +76,15 @@
     "no": "No"
   },
   "units": {
+    "b": "B",
     "kb": "KB",
     "mb": "MB",
     "gb": "GB",
+    "tb": "TB",
+    "kib": "KiB",
+    "mib": "MiB",
+    "gib": "GiB",
+    "tib": "TiB",
     "mbps": "Mbps",
     "ms": "ms",
     "gram": "GRAM"

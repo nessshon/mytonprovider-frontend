@@ -1,10 +1,11 @@
-import type { Provider } from "@/types/provider"
+import type { ApiProvider, Provider } from "@/types/provider"
+import { toProvider } from "./api"
 import type { Translate } from "./format"
 
 export const translate: Translate = (key, options) =>
   options && "count" in options ? `${String(options.count)}${key.slice(key.indexOf(".") + 1)}` : key
 
-const base: Provider = {
+const base: ApiProvider = {
   pubkey: "3a65231e59031a3a0c6f363030712730b11562a3c77556184c05d58adeb6b466",
   address: "EQAjRhPNqC9mY2muFNsYwYI5eqb-lsq-sD5xk3SLfrDljMwB",
   status: 0,
@@ -45,12 +46,12 @@ const base: Provider = {
   ],
 }
 
-const withPubkey = (provider: Provider, suffix: string): Provider => ({
-  ...provider,
-  pubkey: provider.pubkey.slice(0, 58) + suffix,
-})
+const withPubkey = (provider: ApiProvider, suffix: string): Provider =>
+  toProvider({ ...provider, pubkey: provider.pubkey.slice(0, 58) + suffix })
 
-export const stable = base
+export const apiStable = base
+
+export const stable = toProvider(base)
 
 export const overfilled = withPubkey(
   {

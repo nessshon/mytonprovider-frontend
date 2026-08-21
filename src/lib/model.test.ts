@@ -21,7 +21,7 @@ describe("toRow", () => {
     expect(row.uptime).toBe("99.72%")
     expect(row.price).toBe("10")
     expect(row.rating).toBe("20.42")
-    expect(row.freeSpace).toBe("164")
+    expect(row.freeSpace).toBe("175.65")
     expect(row.location).toBe("Russia")
     expect(row.workingTime).toBe("313days 6hr")
   })
@@ -149,6 +149,15 @@ describe("toDetail", () => {
   it("omits telemetry sections for a provider that does not report", () => {
     expect(sectionTitles(silent)).toEqual(["provider"])
     expect(sectionTitles(stable)).toEqual(["provider", "software", "benchmarks", "hardware", "network"])
+  })
+
+  it("prints memory in binary units and everything else in decimal ones", () => {
+    const telemetry = stable.telemetry && { ...stable.telemetry, total_ram_bytes: 17.18e9, usage_ram_bytes: 8.59e9 }
+
+    expect(fieldValue({ ...stable, telemetry }, "provider.ram")).toBe("8 / 16 units.gib")
+    expect(fieldValue(stable, "provider.totalProviderSpace")).toBe("3.93 / 4.1 units.tb")
+    expect(fieldValue(stable, "provider.maxBagSize")).toBe("85.9 units.gb")
+    expect(fieldValue(stable, "provider.speedtestDownload")).toBe("1970 units.mbps")
   })
 
   it("hides readings the node could not measure", () => {

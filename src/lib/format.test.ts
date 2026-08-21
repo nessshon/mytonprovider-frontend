@@ -69,10 +69,12 @@ describe("formatBytes", () => {
     expect(formatBytes(-1, t)).toBe("")
   })
 
-  it("picks the unit by magnitude", () => {
-    expect(formatBytes(2048, t)).toBe("2 units.kb")
-    expect(formatBytes(5 * 1024 ** 2, t)).toBe("5 units.mb")
-    expect(formatBytes(85899345920, t)).toBe("80 units.gb")
+  it("picks the unit by magnitude and counts in thousands", () => {
+    expect(formatBytes(512, t)).toBe("512 units.b")
+    expect(formatBytes(2048, t)).toBe("2.05 units.kb")
+    expect(formatBytes(5 * 1024 ** 2, t)).toBe("5.24 units.mb")
+    expect(formatBytes(4 * 1024 ** 3, t)).toBe("4.29 units.gb")
+    expect(formatBytes(3725.29 * 1024 ** 3, t)).toBe("4 units.tb")
   })
 })
 

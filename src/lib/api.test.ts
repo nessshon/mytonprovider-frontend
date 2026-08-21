@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { ApiError, fetchProviders } from "./api"
-import { stable } from "./fixtures"
+import { apiStable, stable } from "./fixtures"
 
 const signal = () => new AbortController().signal
 
-const page = (count: number) => ({ providers: Array.from({ length: count }, () => stable) })
+const page = (count: number) => ({ providers: Array.from({ length: count }, () => apiStable) })
 
 const respondWith = (bodies: unknown[]) => {
   const calls: string[] = []
@@ -50,7 +50,7 @@ describe("fetchProviders", () => {
   })
 
   it("keeps walking pages when the catalog mixes in entries it cannot use", async () => {
-    const dirty = { providers: [...Array.from({ length: 197 }, () => stable), {}, {}, {}] }
+    const dirty = { providers: [...Array.from({ length: 197 }, () => apiStable), {}, {}, {}] }
     const calls = respondWith([dirty, page(50)])
 
     await expect(fetchProviders(signal())).resolves.toHaveLength(247)
@@ -58,9 +58,20 @@ describe("fetchProviders", () => {
   })
 
   it("drops entries the catalog sends without a key", async () => {
-    respondWith([{ providers: [stable, {}, { pubkey: 42 }] }])
+    respondWith([{ providers: [apiStable, {}, { pubkey: 42 }] }])
 
     await expect(fetchProviders(signal())).resolves.toEqual([stable])
+  })
+
+  it("turns the units the catalog reports into bytes", async () => {
+    respondWith([{ providers: [apiStable] }])
+
+    const [provider] = await fetchProviders(signal())
+
+    expect(provider.telemetry?.total_provider_space_bytes).toBe(4101693767680)
+    expect(provider.telemetry?.used_provider_space_bytes).toBe(3926040342691.84)
+    expect(provider.telemetry?.total_ram_bytes).toBe(4010000000)
+    expect(provider.telemetry?.usage_ram_bytes).toBe(1140000000)
   })
 
   it("reports the status code when the catalog refuses", async () => {
